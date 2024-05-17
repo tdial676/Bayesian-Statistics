@@ -1,0 +1,589 @@
+% Options for packages loaded elsewhere
+\PassOptionsToPackage{unicode}{hyperref}
+\PassOptionsToPackage{hyphens}{url}
+%
+\documentclass[
+]{article}
+\usepackage{amsmath,amssymb}
+\usepackage{iftex}
+\ifPDFTeX
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+  \usepackage{textcomp} % provide euro and other symbols
+\else % if luatex or xetex
+  \usepackage{unicode-math} % this also loads fontspec
+  \defaultfontfeatures{Scale=MatchLowercase}
+  \defaultfontfeatures[\rmfamily]{Ligatures=TeX,Scale=1}
+\fi
+\usepackage{lmodern}
+\ifPDFTeX\else
+  % xetex/luatex font selection
+\fi
+% Use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+\IfFileExists{microtype.sty}{% use microtype if available
+  \usepackage[]{microtype}
+  \UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+}{}
+\makeatletter
+\@ifundefined{KOMAClassName}{% if non-KOMA class
+  \IfFileExists{parskip.sty}{%
+    \usepackage{parskip}
+  }{% else
+    \setlength{\parindent}{0pt}
+    \setlength{\parskip}{6pt plus 2pt minus 1pt}}
+}{% if KOMA class
+  \KOMAoptions{parskip=half}}
+\makeatother
+\usepackage{xcolor}
+\usepackage[margin=1in]{geometry}
+\usepackage{color}
+\usepackage{fancyvrb}
+\newcommand{\VerbBar}{|}
+\newcommand{\VERB}{\Verb[commandchars=\\\{\}]}
+\DefineVerbatimEnvironment{Highlighting}{Verbatim}{commandchars=\\\{\}}
+% Add ',fontsize=\small' for more characters per line
+\usepackage{framed}
+\definecolor{shadecolor}{RGB}{248,248,248}
+\newenvironment{Shaded}{\begin{snugshade}}{\end{snugshade}}
+\newcommand{\AlertTok}[1]{\textcolor[rgb]{0.94,0.16,0.16}{#1}}
+\newcommand{\AnnotationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\AttributeTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{#1}}
+\newcommand{\BaseNTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\BuiltInTok}[1]{#1}
+\newcommand{\CharTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\CommentTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textit{#1}}}
+\newcommand{\CommentVarTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\ConstantTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{#1}}
+\newcommand{\ControlFlowTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
+\newcommand{\DataTypeTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{#1}}
+\newcommand{\DecValTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\DocumentationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\ErrorTok}[1]{\textcolor[rgb]{0.64,0.00,0.00}{\textbf{#1}}}
+\newcommand{\ExtensionTok}[1]{#1}
+\newcommand{\FloatTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\FunctionTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
+\newcommand{\ImportTok}[1]{#1}
+\newcommand{\InformationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\KeywordTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
+\newcommand{\NormalTok}[1]{#1}
+\newcommand{\OperatorTok}[1]{\textcolor[rgb]{0.81,0.36,0.00}{\textbf{#1}}}
+\newcommand{\OtherTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{#1}}
+\newcommand{\PreprocessorTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textit{#1}}}
+\newcommand{\RegionMarkerTok}[1]{#1}
+\newcommand{\SpecialCharTok}[1]{\textcolor[rgb]{0.81,0.36,0.00}{\textbf{#1}}}
+\newcommand{\SpecialStringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\StringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\VariableTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\VerbatimStringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\WarningTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\usepackage{graphicx}
+\makeatletter
+\def\maxwidth{\ifdim\Gin@nat@width>\linewidth\linewidth\else\Gin@nat@width\fi}
+\def\maxheight{\ifdim\Gin@nat@height>\textheight\textheight\else\Gin@nat@height\fi}
+\makeatother
+% Scale images if necessary, so that they will not overflow the page
+% margins by default, and it is still possible to overwrite the defaults
+% using explicit options in \includegraphics[width, height, ...]{}
+\setkeys{Gin}{width=\maxwidth,height=\maxheight,keepaspectratio}
+% Set default figure placement to htbp
+\makeatletter
+\def\fps@figure{htbp}
+\makeatother
+\setlength{\emergencystretch}{3em} % prevent overfull lines
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\setcounter{secnumdepth}{-\maxdimen} % remove section numbering
+\ifLuaTeX
+  \usepackage{selnolig}  % disable illegal ligatures
+\fi
+\IfFileExists{bookmark.sty}{\usepackage{bookmark}}{\usepackage{hyperref}}
+\IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
+\urlstyle{same}
+\hypersetup{
+  pdftitle={problem set 8 template},
+  hidelinks,
+  pdfcreator={LaTeX via pandoc}}
+
+\title{problem set 8 template}
+\author{}
+\date{\vspace{-2.5em}}
+
+\begin{document}
+\maketitle
+
+\hypertarget{question-1}{%
+\section{Question 1}\label{question-1}}
+
+\hypertarget{prelims}{%
+\subsection{prelims}\label{prelims}}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{rm}\NormalTok{(}\AttributeTok{list=}\FunctionTok{ls}\NormalTok{())}
+\FunctionTok{set.seed}\NormalTok{(}\DecValTok{123}\NormalTok{)}
+\FunctionTok{library}\NormalTok{(rstan)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## Loading required package: StanHeaders
+\end{verbatim}
+
+\begin{verbatim}
+## 
+## rstan version 2.32.5 (Stan version 2.32.2)
+\end{verbatim}
+
+\begin{verbatim}
+## For execution on a local, multicore CPU with excess RAM we recommend calling
+## options(mc.cores = parallel::detectCores()).
+## To avoid recompilation of unchanged Stan programs, we recommend calling
+## rstan_options(auto_write = TRUE)
+## For within-chain threading using `reduce_sum()` or `map_rect()` Stan functions,
+## change `threads_per_chain` option:
+## rstan_options(threads_per_chain = 1)
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{options}\NormalTok{(}\AttributeTok{mc.cores =}\NormalTok{ parallel}\SpecialCharTok{::}\FunctionTok{detectCores}\NormalTok{())}
+
+\NormalTok{data }\OtherTok{=} \FunctionTok{read.csv}\NormalTok{(}\StringTok{"BattingAverage.csv"}\NormalTok{)}
+\NormalTok{atbat }\OtherTok{=}\NormalTok{ data}\SpecialCharTok{$}\NormalTok{AtBats}
+\NormalTok{position }\OtherTok{=}\NormalTok{ data}\SpecialCharTok{$}\NormalTok{PriPosNumber}
+\NormalTok{hits }\OtherTok{=}\NormalTok{ data}\SpecialCharTok{$}\NormalTok{Hits}
+\NormalTok{N }\OtherTok{=} \FunctionTok{length}\NormalTok{(hits)}
+\end{Highlighting}
+\end{Shaded}
+
+\hypertarget{step-1}{%
+\subsection{step 1}\label{step-1}}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{fit }\OtherTok{=} \FunctionTok{stan}\NormalTok{(}\StringTok{"ps\_8.stan"}\NormalTok{, }\AttributeTok{iter=}\DecValTok{30000}\NormalTok{, }\AttributeTok{chains=}\DecValTok{4}\NormalTok{, }
+           \AttributeTok{data=}\FunctionTok{list}\NormalTok{(}\AttributeTok{N =}\NormalTok{ N, }\AttributeTok{atbat =}\NormalTok{ atbat, }\AttributeTok{position =}\NormalTok{ position, }\AttributeTok{hits =}\NormalTok{ hits))}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## Trying to compile a simple C file
+\end{verbatim}
+
+\begin{verbatim}
+## Running /Library/Frameworks/R.framework/Resources/bin/R CMD SHLIB foo.c
+## using C compiler: ‘Apple clang version 14.0.0 (clang-1400.0.29.202)’
+## using SDK: ‘MacOSX13.1.sdk’
+## clang -arch arm64 -I"/Library/Frameworks/R.framework/Resources/include" -DNDEBUG   -I"/Library/Frameworks/R.framework/Versions/4.3-arm64/Resources/library/Rcpp/include/"  -I"/Library/Frameworks/R.framework/Versions/4.3-arm64/Resources/library/RcppEigen/include/"  -I"/Library/Frameworks/R.framework/Versions/4.3-arm64/Resources/library/RcppEigen/include/unsupported"  -I"/Library/Frameworks/R.framework/Versions/4.3-arm64/Resources/library/BH/include" -I"/Library/Frameworks/R.framework/Versions/4.3-arm64/Resources/library/StanHeaders/include/src/"  -I"/Library/Frameworks/R.framework/Versions/4.3-arm64/Resources/library/StanHeaders/include/"  -I"/Library/Frameworks/R.framework/Versions/4.3-arm64/Resources/library/RcppParallel/include/"  -I"/Library/Frameworks/R.framework/Versions/4.3-arm64/Resources/library/rstan/include" -DEIGEN_NO_DEBUG  -DBOOST_DISABLE_ASSERTS  -DBOOST_PENDING_INTEGER_LOG2_HPP  -DSTAN_THREADS  -DUSE_STANC3 -DSTRICT_R_HEADERS  -DBOOST_PHOENIX_NO_VARIADIC_EXPRESSION  -D_HAS_AUTO_PTR_ETC=0  -include '/Library/Frameworks/R.framework/Versions/4.3-arm64/Resources/library/StanHeaders/include/stan/math/prim/fun/Eigen.hpp'  -D_REENTRANT -DRCPP_PARALLEL_USE_TBB=1   -I/opt/R/arm64/include    -fPIC  -falign-functions=64 -Wall -g -O2  -c foo.c -o foo.o
+## In file included from <built-in>:1:
+## In file included from /Library/Frameworks/R.framework/Versions/4.3-arm64/Resources/library/StanHeaders/include/stan/math/prim/fun/Eigen.hpp:22:
+## In file included from /Library/Frameworks/R.framework/Versions/4.3-arm64/Resources/library/RcppEigen/include/Eigen/Dense:1:
+## In file included from /Library/Frameworks/R.framework/Versions/4.3-arm64/Resources/library/RcppEigen/include/Eigen/Core:88:
+## /Library/Frameworks/R.framework/Versions/4.3-arm64/Resources/library/RcppEigen/include/Eigen/src/Core/util/Macros.h:628:1: error: unknown type name 'namespace'
+## namespace Eigen {
+## ^
+## /Library/Frameworks/R.framework/Versions/4.3-arm64/Resources/library/RcppEigen/include/Eigen/src/Core/util/Macros.h:628:16: error: expected ';' after top level declarator
+## namespace Eigen {
+##                ^
+##                ;
+## In file included from <built-in>:1:
+## In file included from /Library/Frameworks/R.framework/Versions/4.3-arm64/Resources/library/StanHeaders/include/stan/math/prim/fun/Eigen.hpp:22:
+## In file included from /Library/Frameworks/R.framework/Versions/4.3-arm64/Resources/library/RcppEigen/include/Eigen/Dense:1:
+## /Library/Frameworks/R.framework/Versions/4.3-arm64/Resources/library/RcppEigen/include/Eigen/Core:96:10: fatal error: 'complex' file not found
+## #include <complex>
+##          ^~~~~~~~~
+## 3 errors generated.
+## make: *** [foo.o] Error 1
+\end{verbatim}
+
+\begin{verbatim}
+## Warning: There were 1 chains where the estimated Bayesian Fraction of Missing Information was low. See
+## https://mc-stan.org/misc/warnings.html#bfmi-low
+\end{verbatim}
+
+\begin{verbatim}
+## Warning: Examine the pairs() plot to diagnose sampling problems
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{print}\NormalTok{(fit, }\AttributeTok{pars =} \FunctionTok{c}\NormalTok{(}\StringTok{"kc"}\NormalTok{, }\StringTok{"wc"}\NormalTok{, }\StringTok{"k"}\NormalTok{, }\StringTok{"w"}\NormalTok{, }\StringTok{"theta[1]"}\NormalTok{, }\StringTok{"theta[500]"}\NormalTok{, }
+                    \StringTok{"theta[948]"}\NormalTok{), }\AttributeTok{probs =} \FunctionTok{c}\NormalTok{(}\FloatTok{0.05}\NormalTok{, }\FloatTok{0.5}\NormalTok{, }\FloatTok{0.95}\NormalTok{))}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## Inference for Stan model: anon_model.
+## 4 chains, each with iter=30000; warmup=15000; thin=1; 
+## post-warmup draws per chain=15000, total post-warmup draws=60000.
+## 
+##              mean se_mean     sd     5%    50%    95%  n_eff Rhat
+## kc[1]      105.22    1.14  45.64  52.90  95.11 191.24   1606    1
+## kc[2]      170.13    0.36  46.98 105.45 163.78 256.48  17078    1
+## kc[3]      237.53    0.48  69.35 144.09 227.23 364.80  20841    1
+## kc[4]      256.25    0.60  81.63 147.20 244.10 408.33  18432    1
+## kc[5]      210.61    0.49  66.84 121.73 200.46 334.35  18687    1
+## kc[6]      240.41    0.62  83.78 130.96 226.84 397.39  18556    1
+## kc[7]      213.91    0.52  62.87 130.19 204.81 329.11  14817    1
+## kc[8]      238.37    0.53  76.14 136.12 227.06 378.75  20552    1
+## kc[9]      399.47    0.96 133.81 220.28 379.03 647.58  19272    1
+## wc[1]        0.12    0.00   0.01   0.11   0.12   0.13   4492    1
+## wc[2]        0.24    0.00   0.01   0.23   0.24   0.25  39149    1
+## wc[3]        0.25    0.00   0.00   0.24   0.25   0.26  45811    1
+## wc[4]        0.25    0.00   0.01   0.24   0.25   0.26  44902    1
+## wc[5]        0.26    0.00   0.01   0.25   0.26   0.26  42845    1
+## wc[6]        0.25    0.00   0.01   0.24   0.25   0.26  43153    1
+## wc[7]        0.25    0.00   0.00   0.24   0.25   0.26  35667    1
+## wc[8]        0.26    0.00   0.01   0.25   0.26   0.27  47269    1
+## wc[9]        0.26    0.00   0.00   0.25   0.26   0.27  42576    1
+## k           59.54    0.16  31.89  18.11  54.08 119.82  42161    1
+## w            0.23    0.00   0.02   0.19   0.23   0.26  20065    1
+## theta[1]     0.13    0.00   0.03   0.08   0.13   0.19 103702    1
+## theta[500]   0.24    0.00   0.03   0.19   0.24   0.30 114894    1
+## theta[948]   0.27    0.00   0.01   0.24   0.27   0.29 115985    1
+## 
+## Samples were drawn using NUTS(diag_e) at Wed Feb 28 23:59:58 2024.
+## For each parameter, n_eff is a crude measure of effective sample size,
+## and Rhat is the potential scale reduction factor on split chains (at 
+## convergence, Rhat=1).
+\end{verbatim}
+
+\hypertarget{step-2}{%
+\subsection{Step 2}\label{step-2}}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\#Extract the Rhat statistic for the 968 parameters and plot them in a histogram}
+\NormalTok{fit\_summary }\OtherTok{=} \FunctionTok{summary}\NormalTok{(fit)}\SpecialCharTok{$}\NormalTok{summary}
+\NormalTok{rhats }\OtherTok{=}\NormalTok{ fit\_summary[}\DecValTok{1}\SpecialCharTok{:}\DecValTok{968}\NormalTok{,}\StringTok{"Rhat"}\NormalTok{]}
+\NormalTok{ess }\OtherTok{=}\NormalTok{ fit\_summary[}\DecValTok{1}\SpecialCharTok{:}\DecValTok{968}\NormalTok{,}\StringTok{"n\_eff"}\NormalTok{]}
+\FunctionTok{hist}\NormalTok{(rhats, }\AttributeTok{breaks =} \DecValTok{50}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics{problem_set_8_template_files/figure-latex/unnamed-chunk-4-1.pdf}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# Extract the ESS statistic for the 968 parameters and plot them in a histogram}
+\FunctionTok{hist}\NormalTok{(ess)}
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics{problem_set_8_template_files/figure-latex/unnamed-chunk-5-1.pdf}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{print}\NormalTok{(}\FunctionTok{min}\NormalTok{(ess))}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1] 1606.347
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\#Identify the 10 parameters with the worse Rhat statistic and the 10 parameters}
+\CommentTok{\#with the worse ESS statistic.}
+
+\NormalTok{worst\_rhats }\OtherTok{=} \FunctionTok{sort}\NormalTok{(rhats)[}\DecValTok{1}\SpecialCharTok{:}\DecValTok{10}\NormalTok{]}
+\NormalTok{worst\_esss }\OtherTok{=} \FunctionTok{sort}\NormalTok{(ess)[}\DecValTok{1}\SpecialCharTok{:}\DecValTok{10}\NormalTok{]}
+
+\FunctionTok{print}\NormalTok{(}\FunctionTok{data.frame}\NormalTok{(}\AttributeTok{Parameter =}\NormalTok{ worst\_rhats))}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+##            Parameter
+## theta[582] 0.9999375
+## theta[922] 0.9999380
+## theta[762] 0.9999380
+## theta[751] 0.9999385
+## theta[602] 0.9999388
+## theta[328] 0.9999395
+## theta[876] 0.9999395
+## theta[607] 0.9999396
+## theta[275] 0.9999399
+## theta[188] 0.9999401
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{print}\NormalTok{(}\FunctionTok{data.frame}\NormalTok{(}\AttributeTok{Parameter =}\NormalTok{ worst\_esss))}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+##            Parameter
+## kc[1]       1606.347
+## wc[1]       4492.336
+## theta[494] 10542.770
+## theta[358] 12184.444
+## theta[839] 13520.697
+## theta[102] 14386.723
+## kc[7]      14817.002
+## kc[2]      17078.407
+## kc[4]      18431.636
+## kc[6]      18556.276
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\#Inspect the trace plots for both hyperparameters, for the field position mode }
+\CommentTok{\#and concentrations, and for the theta of the 1st, 500th, and 948th player in }
+\CommentTok{\#the dataset.}
+\FunctionTok{traceplot}\NormalTok{(fit, }\AttributeTok{inc\_warmup =} \ConstantTok{FALSE}\NormalTok{, }\AttributeTok{nrow =} \DecValTok{5}\NormalTok{, }\AttributeTok{window =} \FunctionTok{c}\NormalTok{(}\DecValTok{25000}\NormalTok{, }\DecValTok{30000}\NormalTok{), }
+          \AttributeTok{pars =} \FunctionTok{c}\NormalTok{(}\StringTok{"k"}\NormalTok{, }\StringTok{"w"}\NormalTok{, }\StringTok{"theta[1]"}\NormalTok{, }\StringTok{"theta[500]"}\NormalTok{, }\StringTok{"theta[948]"}\NormalTok{))}
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics{problem_set_8_template_files/figure-latex/unnamed-chunk-7-1.pdf}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{traceplot}\NormalTok{(fit, }\AttributeTok{inc\_warmup =} \ConstantTok{FALSE}\NormalTok{, }\AttributeTok{window =} \FunctionTok{c}\NormalTok{(}\DecValTok{25000}\NormalTok{, }\DecValTok{30000}\NormalTok{), }
+          \AttributeTok{pars =} \FunctionTok{c}\NormalTok{(}\StringTok{"kc"}\NormalTok{, }\StringTok{"wc"}\NormalTok{))}
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics{problem_set_8_template_files/figure-latex/unnamed-chunk-8-1.pdf}
+Everything seems to converge. \#\# step 3
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{samples }\OtherTok{=} \FunctionTok{extract}\NormalTok{(fit)}
+\NormalTok{w\_catcher }\OtherTok{=}\NormalTok{ samples}\SpecialCharTok{$}\NormalTok{wc[, }\DecValTok{2}\NormalTok{]}
+\NormalTok{w\_pitcher }\OtherTok{=}\NormalTok{ samples}\SpecialCharTok{$}\NormalTok{wc[, }\DecValTok{1}\NormalTok{]}
+\NormalTok{difference }\OtherTok{=}\NormalTok{ w\_catcher }\SpecialCharTok{{-}}\NormalTok{ w\_pitcher}
+\FunctionTok{hist}\NormalTok{(difference, }\AttributeTok{breaks =} \DecValTok{40}\NormalTok{, }\AttributeTok{main=}\StringTok{"Posterior Differences Between Catchers and Pitchers"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics{problem_set_8_template_files/figure-latex/unnamed-chunk-9-1.pdf}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{library}\NormalTok{(bayestestR)}
+\FunctionTok{hdi}\NormalTok{(difference)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## 95% HDI: [0.10, 0.13]
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{paste}\NormalTok{(}\StringTok{"|P(w\_catcher \textgreater{} w\_pitcher): "}\NormalTok{, }\FunctionTok{mean}\NormalTok{(difference }\SpecialCharTok{\textgreater{}} \DecValTok{0}\NormalTok{))}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1] "|P(w_catcher > w_pitcher):  1"
+\end{verbatim}
+
+\hypertarget{step-4}{%
+\subsection{Step 4}\label{step-4}}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{w\_catcher }\OtherTok{=}\NormalTok{ samples}\SpecialCharTok{$}\NormalTok{wc[, }\DecValTok{2}\NormalTok{]}
+\NormalTok{w\_first\_base }\OtherTok{=}\NormalTok{ samples}\SpecialCharTok{$}\NormalTok{wc[, }\DecValTok{3}\NormalTok{]}
+\NormalTok{diff2 }\OtherTok{=}\NormalTok{ w\_catcher }\SpecialCharTok{{-}}\NormalTok{ w\_first\_base}
+\FunctionTok{hist}\NormalTok{(diff2, }\AttributeTok{breaks =} \DecValTok{40}\NormalTok{, }\AttributeTok{main=}\StringTok{"Posterior Differences Between Catchers and First Base"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics{problem_set_8_template_files/figure-latex/unnamed-chunk-11-1.pdf}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{hdi}\NormalTok{(diff2)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## 95% HDI: [-0.03,  0.00]
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{paste}\NormalTok{(}\StringTok{"|P(w\_catcher \textgreater{} w\_first\_base): "}\NormalTok{, }\FunctionTok{mean}\NormalTok{(diff2 }\SpecialCharTok{\textgreater{}} \DecValTok{0}\NormalTok{))}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1] "|P(w_catcher > w_first_base):  0.0220333333333333"
+\end{verbatim}
+
+\hypertarget{step-5}{%
+\subsection{step 5}\label{step-5}}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{hist}\NormalTok{(samples}\SpecialCharTok{$}\NormalTok{w, }\AttributeTok{freq =} \ConstantTok{FALSE}\NormalTok{, }\AttributeTok{xlim =} \FunctionTok{c}\NormalTok{(}\FunctionTok{min}\NormalTok{(samples}\SpecialCharTok{$}\NormalTok{wc), }\FunctionTok{max}\NormalTok{(samples}\SpecialCharTok{$}\NormalTok{wc)), }\AttributeTok{ylim=}\FunctionTok{c}\NormalTok{(}\DecValTok{0}\NormalTok{, }\DecValTok{80}\NormalTok{),}
+     \AttributeTok{main =} \StringTok{"Posterior Distribution Of Batting Averages"}\NormalTok{,}
+     \AttributeTok{xlab =} \StringTok{"Batting Average"}\NormalTok{, }\AttributeTok{breaks=}\DecValTok{50}\NormalTok{)}
+
+\FunctionTok{lines}\NormalTok{(}\FunctionTok{density}\NormalTok{(samples}\SpecialCharTok{$}\NormalTok{w), }\AttributeTok{lwd =} \DecValTok{2}\NormalTok{, }\AttributeTok{col =} \StringTok{"blue"}\NormalTok{)}
+\NormalTok{colors }\OtherTok{=} \FunctionTok{rainbow}\NormalTok{(}\DecValTok{9}\NormalTok{)}
+\ControlFlowTok{for}\NormalTok{ (i }\ControlFlowTok{in} \DecValTok{1}\SpecialCharTok{:}\DecValTok{9}\NormalTok{) \{}
+  \FunctionTok{lines}\NormalTok{(}\FunctionTok{density}\NormalTok{(samples}\SpecialCharTok{$}\NormalTok{wc[,i]), }\AttributeTok{lwd =} \DecValTok{2}\NormalTok{, }\AttributeTok{col =}\NormalTok{ colors[i])}
+\NormalTok{\}}
+
+\FunctionTok{legend}\NormalTok{(}\StringTok{"topleft"}\NormalTok{, }\AttributeTok{legend =} \FunctionTok{c}\NormalTok{(}\StringTok{"w"}\NormalTok{, }\FunctionTok{paste}\NormalTok{(}\StringTok{"wc"}\NormalTok{, }\DecValTok{1}\SpecialCharTok{:}\DecValTok{9}\NormalTok{, }\AttributeTok{sep =} \StringTok{""}\NormalTok{)), }\AttributeTok{fill =} \FunctionTok{c}\NormalTok{(}\StringTok{"blue"}\NormalTok{, colors), }\AttributeTok{cex =} \FloatTok{0.8}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics{problem_set_8_template_files/figure-latex/unnamed-chunk-13-1.pdf}
+
+This is because w is only informed by nine parameters wc(1:9) whereas
+each wc is informed by way more data points relating to the player's
+positions. Therefore, as wc has more data points informing it, it has a
+tighter posterior compared to w which has 9.
+
+\hypertarget{step-6}{%
+\subsection{step 6}\label{step-6}}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{par}\NormalTok{(}\AttributeTok{mfrow=}\FunctionTok{c}\NormalTok{(}\DecValTok{3}\NormalTok{,}\DecValTok{3}\NormalTok{))}
+
+\ControlFlowTok{for}\NormalTok{ (i }\ControlFlowTok{in} \DecValTok{1}\SpecialCharTok{:}\DecValTok{9}\NormalTok{) \{}
+\NormalTok{  smpw }\OtherTok{=} \FunctionTok{sample}\NormalTok{(samples}\SpecialCharTok{$}\NormalTok{wc[,i], }\DecValTok{10000}\NormalTok{)}
+\NormalTok{  smpk }\OtherTok{=} \FunctionTok{sample}\NormalTok{(samples}\SpecialCharTok{$}\NormalTok{kc[,i], }\DecValTok{10000}\NormalTok{)}
+\NormalTok{  hit\_preds }\OtherTok{=} \FunctionTok{rbeta}\NormalTok{(}\DecValTok{1000}\NormalTok{, smpw }\SpecialCharTok{*}\NormalTok{ smpk, (}\DecValTok{1} \SpecialCharTok{{-}}\NormalTok{ smpw) }\SpecialCharTok{*}\NormalTok{ smpk)}
+\NormalTok{  hits\_ratio }\OtherTok{=}\NormalTok{ hits[position }\SpecialCharTok{==}\NormalTok{ i] }\SpecialCharTok{/}\NormalTok{ atbat[position }\SpecialCharTok{==}\NormalTok{ i]}
+  
+  \CommentTok{\# Plot the histogram of observed hit ratios}
+  \FunctionTok{hist}\NormalTok{(hits\_ratio, }\AttributeTok{probability =} \ConstantTok{TRUE}\NormalTok{, }\AttributeTok{main =} \FunctionTok{paste}\NormalTok{(}\StringTok{"Position"}\NormalTok{, i), }
+       \AttributeTok{xlab =} \StringTok{"Hit Ratio"}\NormalTok{, }\AttributeTok{ylab =} \StringTok{"Density"}\NormalTok{, }\AttributeTok{xlim =} \FunctionTok{range}\NormalTok{(}\FunctionTok{c}\NormalTok{(hits\_ratio, hit\_preds)),}
+       \AttributeTok{ylim=}\FunctionTok{c}\NormalTok{(}\DecValTok{0}\NormalTok{, }\DecValTok{18}\NormalTok{), }\AttributeTok{breaks=}\DecValTok{20}\NormalTok{)}
+  
+  \FunctionTok{lines}\NormalTok{(}\FunctionTok{density}\NormalTok{(hit\_preds), }\AttributeTok{col =} \StringTok{"blue"}\NormalTok{)}
+\NormalTok{\}}
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics{problem_set_8_template_files/figure-latex/unnamed-chunk-14-1.pdf}
+
+\hypertarget{step-7}{%
+\subsection{step 7}\label{step-7}}
+
+No as the pitcher is not really related to the others as pitcher is
+clearly an outlier here.
+
+\hypertarget{question-2}{%
+\section{Question 2}\label{question-2}}
+
+\hypertarget{step-1-1}{%
+\subsection{step 1}\label{step-1-1}}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{fit\_2 }\OtherTok{=} \FunctionTok{stan}\NormalTok{(}\StringTok{"ps\_8\_2.stan"}\NormalTok{, }\AttributeTok{iter=}\DecValTok{25000}\NormalTok{, }\AttributeTok{chains=}\DecValTok{4}\NormalTok{, }
+           \AttributeTok{data=}\FunctionTok{list}\NormalTok{(}\AttributeTok{N =}\NormalTok{ N, }\AttributeTok{atbat =}\NormalTok{ atbat, }\AttributeTok{position =}\NormalTok{ position, }\AttributeTok{hits =}\NormalTok{ hits))}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## Trying to compile a simple C file
+\end{verbatim}
+
+\begin{verbatim}
+## Running /Library/Frameworks/R.framework/Resources/bin/R CMD SHLIB foo.c
+## using C compiler: ‘Apple clang version 14.0.0 (clang-1400.0.29.202)’
+## using SDK: ‘MacOSX13.1.sdk’
+## clang -arch arm64 -I"/Library/Frameworks/R.framework/Resources/include" -DNDEBUG   -I"/Library/Frameworks/R.framework/Versions/4.3-arm64/Resources/library/Rcpp/include/"  -I"/Library/Frameworks/R.framework/Versions/4.3-arm64/Resources/library/RcppEigen/include/"  -I"/Library/Frameworks/R.framework/Versions/4.3-arm64/Resources/library/RcppEigen/include/unsupported"  -I"/Library/Frameworks/R.framework/Versions/4.3-arm64/Resources/library/BH/include" -I"/Library/Frameworks/R.framework/Versions/4.3-arm64/Resources/library/StanHeaders/include/src/"  -I"/Library/Frameworks/R.framework/Versions/4.3-arm64/Resources/library/StanHeaders/include/"  -I"/Library/Frameworks/R.framework/Versions/4.3-arm64/Resources/library/RcppParallel/include/"  -I"/Library/Frameworks/R.framework/Versions/4.3-arm64/Resources/library/rstan/include" -DEIGEN_NO_DEBUG  -DBOOST_DISABLE_ASSERTS  -DBOOST_PENDING_INTEGER_LOG2_HPP  -DSTAN_THREADS  -DUSE_STANC3 -DSTRICT_R_HEADERS  -DBOOST_PHOENIX_NO_VARIADIC_EXPRESSION  -D_HAS_AUTO_PTR_ETC=0  -include '/Library/Frameworks/R.framework/Versions/4.3-arm64/Resources/library/StanHeaders/include/stan/math/prim/fun/Eigen.hpp'  -D_REENTRANT -DRCPP_PARALLEL_USE_TBB=1   -I/opt/R/arm64/include    -fPIC  -falign-functions=64 -Wall -g -O2  -c foo.c -o foo.o
+## In file included from <built-in>:1:
+## In file included from /Library/Frameworks/R.framework/Versions/4.3-arm64/Resources/library/StanHeaders/include/stan/math/prim/fun/Eigen.hpp:22:
+## In file included from /Library/Frameworks/R.framework/Versions/4.3-arm64/Resources/library/RcppEigen/include/Eigen/Dense:1:
+## In file included from /Library/Frameworks/R.framework/Versions/4.3-arm64/Resources/library/RcppEigen/include/Eigen/Core:88:
+## /Library/Frameworks/R.framework/Versions/4.3-arm64/Resources/library/RcppEigen/include/Eigen/src/Core/util/Macros.h:628:1: error: unknown type name 'namespace'
+## namespace Eigen {
+## ^
+## /Library/Frameworks/R.framework/Versions/4.3-arm64/Resources/library/RcppEigen/include/Eigen/src/Core/util/Macros.h:628:16: error: expected ';' after top level declarator
+## namespace Eigen {
+##                ^
+##                ;
+## In file included from <built-in>:1:
+## In file included from /Library/Frameworks/R.framework/Versions/4.3-arm64/Resources/library/StanHeaders/include/stan/math/prim/fun/Eigen.hpp:22:
+## In file included from /Library/Frameworks/R.framework/Versions/4.3-arm64/Resources/library/RcppEigen/include/Eigen/Dense:1:
+## /Library/Frameworks/R.framework/Versions/4.3-arm64/Resources/library/RcppEigen/include/Eigen/Core:96:10: fatal error: 'complex' file not found
+## #include <complex>
+##          ^~~~~~~~~
+## 3 errors generated.
+## make: *** [foo.o] Error 1
+\end{verbatim}
+
+\begin{verbatim}
+## Warning: There were 1 transitions after warmup that exceeded the maximum treedepth. Increase max_treedepth above 10. See
+## https://mc-stan.org/misc/warnings.html#maximum-treedepth-exceeded
+\end{verbatim}
+
+\begin{verbatim}
+## Warning: Examine the pairs() plot to diagnose sampling problems
+\end{verbatim}
+
+\hypertarget{step-2-1}{%
+\subsection{step 2}\label{step-2-1}}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{samples\_2 }\OtherTok{=} \FunctionTok{extract}\NormalTok{(fit\_2)}
+\FunctionTok{hist}\NormalTok{(samples\_2}\SpecialCharTok{$}\NormalTok{w, }\AttributeTok{freq =} \ConstantTok{FALSE}\NormalTok{, }\AttributeTok{xlim =} \FunctionTok{c}\NormalTok{(}\FunctionTok{min}\NormalTok{(samples\_2}\SpecialCharTok{$}\NormalTok{wc), }\FunctionTok{max}\NormalTok{(samples\_2}\SpecialCharTok{$}\NormalTok{wc)), }\AttributeTok{ylim=}\FunctionTok{c}\NormalTok{(}\DecValTok{0}\NormalTok{, }\DecValTok{90}\NormalTok{),}
+     \AttributeTok{main =} \StringTok{"Posterior Distribution Of Batting Averages"}\NormalTok{,}
+     \AttributeTok{xlab =} \StringTok{"Batting Average"}\NormalTok{, }\AttributeTok{breaks=}\DecValTok{50}\NormalTok{)}
+
+\FunctionTok{lines}\NormalTok{(}\FunctionTok{density}\NormalTok{(samples\_2}\SpecialCharTok{$}\NormalTok{w), }\AttributeTok{lwd =} \DecValTok{2}\NormalTok{, }\AttributeTok{col =} \StringTok{"blue"}\NormalTok{)}
+\NormalTok{colors }\OtherTok{=} \FunctionTok{rainbow}\NormalTok{(}\DecValTok{9}\NormalTok{)}
+\ControlFlowTok{for}\NormalTok{ (i }\ControlFlowTok{in} \DecValTok{1}\SpecialCharTok{:}\DecValTok{9}\NormalTok{) \{}
+  \FunctionTok{lines}\NormalTok{(}\FunctionTok{density}\NormalTok{(samples\_2}\SpecialCharTok{$}\NormalTok{wc[,i]), }\AttributeTok{lwd =} \DecValTok{2}\NormalTok{, }\AttributeTok{col =}\NormalTok{ colors[i])}
+\NormalTok{\}}
+
+\FunctionTok{legend}\NormalTok{(}\StringTok{"topleft"}\NormalTok{, }\AttributeTok{legend =} \FunctionTok{c}\NormalTok{(}\StringTok{"w"}\NormalTok{, }\FunctionTok{paste}\NormalTok{(}\StringTok{"wc"}\NormalTok{, }\DecValTok{1}\SpecialCharTok{:}\DecValTok{9}\NormalTok{, }\AttributeTok{sep =} \StringTok{""}\NormalTok{)), }
+       \AttributeTok{fill =} \FunctionTok{c}\NormalTok{(}\StringTok{"blue"}\NormalTok{, colors), }\AttributeTok{cex =} \FloatTok{0.8}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics{problem_set_8_template_files/figure-latex/unnamed-chunk-16-1.pdf}
+
+\hypertarget{step-3}{%
+\subsection{step 3}\label{step-3}}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{par}\NormalTok{(}\AttributeTok{mfrow=}\FunctionTok{c}\NormalTok{(}\DecValTok{3}\NormalTok{,}\DecValTok{3}\NormalTok{))}
+
+\ControlFlowTok{for}\NormalTok{ (i }\ControlFlowTok{in} \DecValTok{1}\SpecialCharTok{:}\DecValTok{8}\NormalTok{) \{}
+\NormalTok{  smpw\_2 }\OtherTok{=} \FunctionTok{sample}\NormalTok{(samples\_2}\SpecialCharTok{$}\NormalTok{wc[,i], }\DecValTok{10000}\NormalTok{)}
+\NormalTok{  smpk\_2 }\OtherTok{=} \FunctionTok{sample}\NormalTok{(samples\_2}\SpecialCharTok{$}\NormalTok{kc[,i], }\DecValTok{10000}\NormalTok{)}
+\NormalTok{  hit\_preds\_2 }\OtherTok{=} \FunctionTok{rbeta}\NormalTok{(}\DecValTok{1000}\NormalTok{, smpw\_2 }\SpecialCharTok{*}\NormalTok{ smpk\_2, (}\DecValTok{1} \SpecialCharTok{{-}}\NormalTok{ smpw\_2) }\SpecialCharTok{*}\NormalTok{ smpk\_2)}
+\NormalTok{  hits\_ratio\_2 }\OtherTok{=}\NormalTok{ hits[position }\SpecialCharTok{==}\NormalTok{ i] }\SpecialCharTok{/}\NormalTok{ atbat[position }\SpecialCharTok{==}\NormalTok{ i]}
+  
+  \CommentTok{\# Plot the histogram of observed hit ratios}
+  \FunctionTok{hist}\NormalTok{(hits\_ratio\_2, }\AttributeTok{probability =} \ConstantTok{TRUE}\NormalTok{, }\AttributeTok{main =} \FunctionTok{paste}\NormalTok{(}\StringTok{"Position"}\NormalTok{, i), }
+       \AttributeTok{xlab =} \StringTok{"Hit Ratio"}\NormalTok{, }\AttributeTok{ylab =} \StringTok{"Density"}\NormalTok{, }\AttributeTok{xlim =} \FunctionTok{range}\NormalTok{(}\FunctionTok{c}\NormalTok{(hits\_ratio\_2, hit\_preds\_2)),}
+       \AttributeTok{ylim=}\FunctionTok{c}\NormalTok{(}\DecValTok{0}\NormalTok{, }\DecValTok{18}\NormalTok{), }\AttributeTok{breaks=}\DecValTok{20}\NormalTok{)}
+  
+  \FunctionTok{lines}\NormalTok{(}\FunctionTok{density}\NormalTok{(hit\_preds\_2), }\AttributeTok{col =} \StringTok{"blue"}\NormalTok{)}
+\NormalTok{\}}
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics{problem_set_8_template_files/figure-latex/unnamed-chunk-17-1.pdf}
+
+\hypertarget{step-4-1}{%
+\subsection{step 4}\label{step-4-1}}
+
+The hyper parameter w already has very few data points influencing it
+hence removing one of these data points would lead to a drastic change
+in w. Furthermore, the pitcher had the most variance compared to other
+position's batting average as the position has the furthest batting
+average compared to the rest therefore removing it would lead to this
+tighter posterior for w as all of the other positions were pretty close
+in batting averages as seen in step 2.
+
+\end{document}

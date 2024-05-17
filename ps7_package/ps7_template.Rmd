@@ -1,0 +1,69 @@
+---
+title: "ps7 solutions"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+# Question 2
+
+## prelims
+```{r}
+rm(list=ls())
+set.seed(123)
+library(rstan)
+options(mc.cores = parallel::detectCores())
+
+data = read.csv("MetabolicRate.csv")
+log_size = log(data$BodySize)
+log_rate = log(data$Mrate)
+instar = data$Instar
+N = length(instar)
+```
+
+## Step 2
+```{r}
+fit = stan("ps_7.stan", iter = 10000, chains = 4, 
+           data = list(N = N, log_rate = log_rate, log_size = log_size, instar = instar))
+print(fit, probs = c(0.25, 0.5, 0.75))
+```
+
+## step 3
+```{r}
+traceplot(fit, inc_warmup = FALSE, nrow = 4, window = c(8000, 10000), pars = c("beta0", "beta1", "beta2", "sigma"))
+```
+
+
+## step 4
+```{r}
+pairs(fit, pars = c("beta0", "beta1", "beta2", "sigma"))
+```
+
+## step 6
+```{r}
+library(bayesplot)
+yrep = as.matrix(extract(fit)[["yPred"]])
+idx = sample(nrow(yrep), 100)
+ppc_dens_overlay(log_rate, yrep[idx, ])
+```
+No, this linear regression model does not provide a satisfactory account of the data as the best
+model parameters do not tightly fit our true underlying distribution.
+
+
+## step 7
+```{r}
+library(gridExtra)
+library(ggplot2)
+
+plot1 = ppc_dens_overlay(log_rate[instar == 1], yrep[idx,  instar==1]) + ggtitle("Instar = 1")
+plot2 = ppc_dens_overlay(log_rate[instar == 2], yrep[idx,  instar==2]) + ggtitle("Instar = 2")
+plot3 = ppc_dens_overlay(log_rate[instar == 3], yrep[idx,  instar==3]) + ggtitle("Instar = 3")
+plot4 = ppc_dens_overlay(log_rate[instar == 4], yrep[idx,  instar==4]) + ggtitle("Instar = 4")
+plot5 = ppc_dens_overlay(log_rate[instar == 5], yrep[idx,  instar==5]) + ggtitle("Instar = 5")
+
+grid.arrange(plot1, plot2, plot3, plot4, plot5)
+```
+
+Yes, because looking at our plots we see that models fit differently based on instar.
+For example, instar equals 3 and 5 are better fit more closely around the true 
+distribution y compared to instar equals 1 or 2 for example.
