@@ -1,0 +1,374 @@
+---
+title: "ps3_solutions_template"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+# Question 1
+
+## preliminaries
+```{r}
+rm(list = ls())
+set.seed(2024)
+data = read.csv("data_task_duration_difficulty.csv")
+duration = data$duration
+difficulty = data$difficulty
+```
+
+## build model objects
+```{r}
+#Grid Parameters
+mu_Gmin = 0
+si_Gmin = 0.05
+mu_Gmax = 20
+si_Gmax = 10
+nGridPoints = 200
+mu_gridSize = (mu_Gmax - mu_Gmin) / nGridPoints
+si_gridSize = (si_Gmax - si_Gmin) / nGridPoints
+muGrid = seq(mu_Gmin, mu_Gmax, length.out = nGridPoints)
+siGrid = seq(si_Gmin, si_Gmax, length.out = nGridPoints)
+
+#Compute Prior
+computeJointPrior<- function(mu_prior, si_prior) {
+  priorM = outer(mu_prior, si_prior, "*")
+  #Normalize prior matrix
+  priorM = priorM / sum(priorM)
+  priorM = priorM / (mu_gridSize & si_gridSize)
+  return(priorM)
+}
+
+#Compute Posterior
+computeJointPost = function(priorM, x) {
+  postM = matrix(rep(1, nGridPoints ^ 2), 
+                 nrow = nGridPoints,
+                 ncol = nGridPoints,
+                 byrow = TRUE)
+  for (row in 1:nGridPoints) {
+    for (col in 1:nGridPoints) {
+      mu = muGrid[row]
+      sig = siGrid[col]
+      loglike = sum(log(dnorm(x, mu, sig)))
+      prior = priorM[row, col]
+      postM[row, col] = exp(loglike) * prior
+    }
+  }
+  postM = postM / (sum(postM) * mu_gridSize * si_gridSize)
+  return (postM)
+}
+```
+
+## step 1: compute join posterior
+```{r}
+mu_prior = dunif(muGrid, 0, 20)
+mu_prior = mu_prior / (sum(mu_prior) * mu_gridSize)
+si_prior = dunif(siGrid, 0, 10)
+si_prior = si_prior / (sum(si_prior) * si_gridSize)
+
+priorM = computeJointPrior(mu_prior, si_prior)
+postM = computeJointPost(priorM, duration)
+```
+
+## step 2: compute marginal posterior distributions
+```{r}
+mu_PostM = rowSums(postM * si_gridSize)
+si_PostM = colSums(postM * mu_gridSize)
+```
+
+
+## step 3: compute summary statistics of marginal posteriors
+```{r}
+mean_mu = sum(muGrid * mu_PostM) * mu_gridSize
+paste("Mean of marginal posterior for 𝜇: ", round(mean_mu, 5))
+
+sd_mu = sqrt(sum((muGrid - mean_mu) ^ 2 * mu_PostM) * mu_gridSize)
+paste("Standard deviation of marginal posterior for 𝜇: ", round(sd_mu, 5))
+
+mean_si = sum(siGrid * si_PostM) * si_gridSize
+paste("Mean of marginal posterior for 𝜎: ", round(mean_si, 5))
+
+sd_si = sqrt(sum((siGrid - mean_si) ^ 2 * si_PostM) * si_gridSize)
+paste("Standard deviation of marginal posterior for 𝜎: ", round(sd_si, 5))
+
+cov = 0
+for (row in 1:(nGridPoints)) {
+  for (col in 1:nGridPoints) {
+    cov = cov + ((muGrid[row] - mean_mu) * (siGrid[col] - mean_si) * postM[row, col])
+  }
+}
+cov = cov * mu_gridSize  * si_gridSize
+
+paste("Covariance of 𝜇 and 𝜎: ", cov)
+
+```
+
+## step 4: plot heat map of joint posterior
+```{r}
+# visualize joint posterior
+library(lattice)
+new.palette=colorRampPalette(c("white","red","yellow","white"),space="rgb")
+levelplot(main="Joint Posterior",postM, col.regions=new.palette(20),
+          xlab = "mu", ylab = "sigma",
+          #main = paste("muTrue = ", muTrue, ", sigTrue = ", sigTrue),
+          scales=list(x=list(at=c(1,nGridPoints), labels=c(mu_Gmin,mu_Gmax)),
+                     y=list(at=c(1,nGridPoints), labels=c(si_Gmin,si_Gmax))))
+```
+
+
+## step 5: plot marginal posteriors
+```{r}
+plot(main=" Marginal Posterior Distributions For Mu", muGrid, 
+     mu_PostM, type="l", lwd=2, xlab= "Mu", ylab="Posterior")
+points(muGrid, mu_prior, type="l", lwd=3, lty=2)
+abline(v=mean_mu, lwd=2, lty=2, col="green")
+## Enter code here ##
+```
+
+```{r}
+plot(main=" Marginal Posterior Distributions For Sigma", siGrid, 
+     si_PostM, type="l", lwd=2, xlab= "Mu", ylab="Posterior")
+points(siGrid, si_prior, type="l", lwd=3, lty=2)
+abline(v=mean_si, lwd=2, lty=2, col="green")
+## Enter code here ##
+```
+
+## step 6: compute posterior prob mu < 5
+
+```{r}
+prob = sum(mu_PostM[1:(5 / 0.1)]) * mu_gridSize
+paste("Probability that mu is less than five: ", prob)
+```
+
+# Question 2
+
+## preliminaries
+```{r}
+data = subset(data, !is.na(data$difficulty))
+difficulty = data$difficulty
+duration = data$duration
+#Build grids
+B0_grid = seq(-10, 10, by = 0.1)
+B1_grid = seq(-10, 10, by = 0.1)
+si_grid = seq(0.05, 5, by = 0.05)
+
+B_GridPoints = length(B0_grid)
+S_GridPoints = length(si_grid)
+
+B_gridSize = 20 / B_GridPoints
+S_gridSize = (5-0.05) / S_GridPoints
+
+```
+
+## build model objects
+```{r}
+#Assuming an uninformative prior of 1
+prior = 1
+
+likelyhood <- function(x, y, B0, B1, sig) {
+  loglike = sum(log(dnorm(y, (B0 + B1 * x), sig)))
+  like = exp((loglike))
+  return(like)
+}
+
+computeJointPost <- function(x, y) {
+  postM = array(-1, dim = c(B_GridPoints, B_GridPoints, S_GridPoints))
+  for (row in 1:B_GridPoints){
+    B0 = B0_grid[row]
+    for (col in 1:B_GridPoints) {
+      B1 = B1_grid[col]
+      for (layer in 1:S_GridPoints) {
+        si = si_grid[layer]
+        like = likelyhood(x, y, B0, B1, si)
+        postM[row, col, layer] = like * prior
+      }
+    }
+  }
+  postM = postM / (sum(postM) * ((B_gridSize ^ 2) * S_gridSize))
+  return(postM)
+}
+
+```
+
+## Step 1: compute joint posterior
+```{r}
+postM = computeJointPost(difficulty, duration)
+```
+
+## Step 2: compute marginal posteriors
+```{r}
+B0_postM = apply(postM, c(1), sum) * B_gridSize * S_gridSize
+B1_postM = apply(postM, c(2), sum) * B_gridSize * S_gridSize
+si_postM = apply(postM, c(3), sum) * B_gridSize ^ 2
+
+```
+
+## Step 3: compute summary statistics of marginal posteriors
+```{r}
+mean_B0 = sum(B0_grid * B0_postM) * B_gridSize
+paste("Mean of marginal posterior for B0: ", round(mean_B0, 5))
+
+sd_B0 = sqrt(sum((B0_grid - mean_B0) ^ 2 * B0_postM) * B_gridSize)
+paste("Standard deviation of marginal posterior for B0: ", round(sd_B0, 5))
+
+mean_B1 = sum(B1_grid * B1_postM) * B_gridSize
+paste("Mean of marginal posterior for B1: ", round(mean_B1, 5))
+
+sd_B1 = sqrt(sum((B1_grid - mean_B1) ^ 2 * B1_postM) * B_gridSize)
+paste("Standard deviation of marginal posterior for B1: ", round(sd_B1, 5))
+
+mean_si = sum(si_grid * si_postM) * S_gridSize
+paste("Mean of marginal posterior for 𝜎: ", round(mean_si, 5))
+
+sd_si = sqrt(sum((si_grid - mean_si) ^ 2 * si_postM) * S_gridSize)
+paste("Standard deviation of marginal posterior for 𝜎: ", round(sd_si, 5))
+
+B0_B1_postM = apply(postM, c(1, 2), sum) * S_gridSize
+cov = 0
+for (row in 1:B_GridPoints) {
+  for (col in 1:B_GridPoints) {
+    cov = cov + ((B0_grid[row] - mean_B0) * (B1_grid[col] - mean_B1) * B0_B1_postM[row, col])
+  }
+}
+cov = cov / sum(B0_B1_postM)
+
+paste("Covariance of B0 and B1: ", round(cov, 5))
+```
+
+## Step 4: plot marginal posterior densities
+```{r}
+plot(main=" Marginal Posterior Distributions For B0", B0_grid, 
+     B0_postM, type="l", lwd=2, xlab= "B0", ylab="Posterior")
+#points(B0_grid, rep(1, B_GridPoints), type="l", lwd=3, lty=2)
+abline(v=mean_B0, lwd=2, lty=2, col="green")
+```
+```{r}
+plot(main=" Marginal Posterior Distributions For B1", B1_grid, 
+     B1_postM, type="l", lwd=2, xlab= "B1", ylab="Posterior")
+#points(B1_grid, rep(1, B_GridPoints), type="l", lwd=3, lty=2)
+abline(v=mean_B1, lwd=2, lty=2, col="green")
+```
+```{r}
+plot(main=" Marginal Posterior Distributions For B0", si_grid, 
+     si_postM, type="l", lwd=2, xlab= "Sigma", ylab="Posterior")
+points(si_grid, rep(1, S_GridPoints), type="l", lwd=3, lty=2)
+abline(v=mean_si, lwd=2, lty=2, col="green")
+```
+
+## Step 5: Heat maps of joint posterior distributions
+```{r}
+# joint posterior: beta0-beta1
+B0_B1_postM = apply(postM, c(1, 2), sum) * S_gridSize
+library(lattice)
+new.palette=colorRampPalette(c("white","red","yellow","white"),space="rgb")
+levelplot(main="Joint Posterior For B0 and B1",B0_B1_postM, col.regions=new.palette(20),
+          xlab = "B0", ylab = "B1",
+          scales=list(x=list(at=c(1,B_GridPoints), labels=c(-10,10)),
+                     y=list(at=c(1,B_GridPoints), labels=c(-10,10))))
+```
+
+```{r}
+# joint posterior: beta1-sigma
+B0_si_postM = apply(postM, c(1, 3), sum) * B_gridSize
+library(lattice)
+new.palette=colorRampPalette(c("white","red","yellow","white"),space="rgb")
+levelplot(main="Joint Posterior For B0 and Sigma",B0_si_postM, col.regions=new.palette(20),
+          xlab = "B0", ylab = "Sigma",
+          scales=list(x=list(at=c(1,B_GridPoints), labels=c(-10,10)),
+                     y=list(at=c(1,S_GridPoints), labels=c(0.05,5))))
+```
+
+```{r}
+# joint posterior: beta0-sigma
+B1_si_postM = apply(postM, c(2, 3), sum) * B_gridSize
+library(lattice)
+new.palette=colorRampPalette(c("white","red","yellow","white"),space="rgb")
+levelplot(main="Joint Posterior For B1 and Sigma",B1_si_postM, col.regions=new.palette(20),
+          xlab = "B1", ylab = "Sigma",
+          scales=list(x=list(at=c(1,B_GridPoints), labels=c(-10,10)),
+                     y=list(at=c(1,S_GridPoints), labels=c(0.05,5))))
+```
+
+## Step 6: Visualize uncertainty in posterior regression lines
+
+```{r}
+#build conditional posteriors
+margBeta0 = apply(postM,c(1),sum)
+margBeta1GivenBeta0 = array(rep(-1,B_GridPoints ^ 2), 
+                            dim= c(B_GridPoints, B_GridPoints))
+
+for (nBeta0 in 1:B_GridPoints) {
+  margBeta1GivenBeta0[nBeta0,] = apply(postM[nBeta0,,],c(1),sum)
+}
+
+# initialize plot
+plot(difficulty, duration, xlim=c(min(difficulty), max(difficulty)),
+     ylim=c(min(duration),max(duration))) #plot posterior reg lines
+for (sim in 1:1000) {
+  b0Index = sample(1:B_GridPoints, 1, prob=margBeta0)
+  b1Index = sample(1:B_GridPoints, 1, prob=margBeta1GivenBeta0[b0Index,])
+  b0Sample = B0_grid[b0Index]
+  b1Sample = B1_grid[b1Index]
+  points(difficulty, b0Sample + b1Sample*difficulty, type="l",lwd=3,
+  col=rgb(red=0.0, green=0.0, blue=1.0, alpha=0.025)) 
+}
+points(difficulty, mean_B0 + mean_B1*difficulty, lwd=2, col=2, lty=2, type="l")
+```
+
+
+
+# Question 3
+
+## preliminaries
+```{r}
+#Data is already partioned to leave out Nan
+```
+
+## Step 1: About normality of duration data
+```{r}
+hist(duration,
+     breaks = 15,
+     prob = TRUE)
+abline(v=mean(duration), lty=2, lwd=2, col="red") 
+lines(density((duration)))
+```
+```{r}
+st_duration = scale(duration)
+qqnorm(st_duration)
+qqline(st_duration)
+```
+
+.... 
+These plots are mostly consistant with the normality assumption of the model as 
+the desinty on the histogram seems to roughly form a normal distibution. 
+Furthermore, on our qqplot, the norm points seem to closely follow our
+reference qqline meanining that our data mostly conforms to a normal distribution.
+....
+
+## Step 2: About normality of errors in regression model
+
+```{r}
+model = lm(duration ~ difficulty)
+modelriz = resid(model)
+hist(modelriz,
+  main = "Residuals",
+  xlab = "residual magnitude",
+  prob = TRUE, # show densities instead of frequencies xlab = "residual magnitude",
+  breaks = 15)
+abline(v=mean(modelriz), lty=2, lwd=2, col="red")
+lines(density(modelriz))
+```
+```{r}
+paste("Beta 0 hat, Beta 1 hat estimate: ", coef(model)[1],",", coef(model)[2])
+```
+```{r}
+st_riz = scale(modelriz)
+qqnorm(st_riz)
+qqline(st_riz)
+```
+
+....
+Yes again because the desnity curve on the histogram appears gaussian
+while the qqnorm points on our Q-Q plot mostly follow the reference line 
+meaning that our sample mostly follows the theoretical quantiles hence
+our assumption of normality is consistant.
+....
