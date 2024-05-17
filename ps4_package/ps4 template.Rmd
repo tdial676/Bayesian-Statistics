@@ -1,0 +1,423 @@
+---
+title: "ps 4 Submission"
+output:
+  html_document:
+    df_print: paged
+---
+
+
+## preliminaries
+```{r}
+#clear workspace
+rm(list=ls())
+#loas data
+data = read.csv("MetabolicRate.csv")
+
+# build variable
+mRate = log(data$Mrate)
+instar = data$Instar
+bodySize = log(data$BodySize)
+```
+
+# Question 1
+
+## Step 1
+```{r}
+pairs(data)
+```
+
+They all appear to be a positively correlated as seen by the scatter plot as pairs() gives 
+us the correlation between variables. We see that the points of each scatter plot appears to
+be increasing hence the positive correlation between variables. This raises the concerns 
+because we are constructing our likelihood with bodysize and instar as weights which we assume
+are independent, but according to this they appear positively correlated therefore making it harder
+to identify the individual contribution of each.
+
+## Step 2
+```{r}
+# Build grid
+stepBeta0Grid = 0.25
+stepBeta1Grid = 0.1
+stepBeta2Grid = 0.1
+stepSigmaGrid = 0.1
+
+beta0Grid = seq(-5, 5, by = stepBeta0Grid)
+beta1Grid = seq(-2, 2, by = stepBeta1Grid)
+beta2Grid = seq(-2, 2, by = stepBeta2Grid)
+sigmaGrid = seq(0.1, 3, by = stepSigmaGrid)
+
+nBeta0Grid = length(beta0Grid)
+nBeta1Grid = length(beta1Grid)
+nBeta2Grid = length(beta2Grid)
+nSigmaGrid = length(sigmaGrid)
+
+# Uninformed Priors
+computePrior <- function() {
+  prior = array(rep(1, nBeta0Grid * nBeta1Grid * nBeta2Grid * nSigmaGrid),
+                dim = c(nBeta0Grid, nBeta1Grid, nBeta2Grid, nSigmaGrid))
+  for (nB0 in 1:nBeta0Grid) {
+    for (nB1 in 1:nBeta1Grid) {
+      for (nB2 in 1:nBeta2Grid) {
+        for (nSig in 1:nSigmaGrid) {
+          prior[nB0, nB1, nB2, nSig] = 1 / (nSig ^ 2)
+        }
+      }
+    }
+  }
+  return(prior)
+}
+
+# Compute Likelihood
+# y = mRate, x1 = bodySize, x2 = instar
+computeLikelihood <- function(y, x1, x2, b0, b1, b2, noise) {
+  logLike = sum(log(dnorm(y - (b0 + b1 * x1 + b2 * x2), mean=0, noise)))
+  like = exp(logLike)
+  return(like)
+}
+
+# Compute Posterior
+computeJointPost <- function(y, x1, x2, priorM) {
+  postM = array(1, dim = c(nBeta0Grid, nBeta1Grid, nBeta2Grid, nSigmaGrid))
+  for (nB0 in 1:nBeta0Grid) {
+    B0 = beta0Grid[nB0]
+    for (nB1 in 1:nBeta1Grid) {
+      B1 = beta1Grid[nB1]
+      for (nB2 in 1:nBeta2Grid) {
+        B2 = beta2Grid[nB2]
+        for (nSig in 1:nSigmaGrid) {
+          sig = sigmaGrid[nSig]
+          prior = priorM[nB0, nB1, nB2, nSig]
+          likelihood = computeLikelihood(y, x1, x2, B0, B1, B2, sig)
+          posterior = likelihood * prior
+          postM[nB0, nB1, nB2, nSig] = posterior
+        }
+      }
+    }
+  }
+  # normalize
+  postM = postM / (sum(postM) * stepBeta0Grid * stepBeta1Grid * stepBeta2Grid * stepSigmaGrid)
+  return(postM)
+}
+
+#Compute Joint Posterior
+priorM = computePrior()
+postM = computeJointPost(mRate, bodySize, instar, priorM)
+```
+
+### Marginal Posterior Plots
+```{r}
+# Posterior Beta 0|data
+mPostBeta0 = apply(postM, c(1), sum)
+mPostBeta0 = mPostBeta0 /  (sum(mPostBeta0) * stepBeta0Grid)
+plot(beta0Grid, mPostBeta0, main = "Marginal Posterior Distributions For Beta 0", 
+     type="l", lwd=2, xlab="Beta 0", ylab="Posterior")
+
+```
+```{r}
+# Posterior Beta 1|data
+mPostBeta1 = apply(postM, c(2), sum)
+mPostBeta1 = mPostBeta1 /  (sum(mPostBeta1) * stepBeta1Grid)
+plot(beta1Grid, mPostBeta1, main = "Marginal Posterior Distributions For Beta 1", 
+     type="l", lwd=2, xlab="Beta 1", ylab="Posterior")
+
+```
+```{r}
+# Posterior Beta 2|data
+mPostBeta2 = apply(postM, c(3), sum)
+mPostBeta2 = mPostBeta2 /  (sum(mPostBeta2) * stepBeta2Grid)
+plot(beta2Grid, mPostBeta2, main = "Marginal Posterior Distributions For Beta 2", 
+     type="l", lwd=2, xlab="Beta 2", ylab="Posterior")
+
+```
+```{r}
+# Posterior Sigma|data
+mPostSigma = apply(postM, c(4), sum)
+mPostSigma = mPostSigma /  (sum(mPostSigma) * stepSigmaGrid)
+plot(sigmaGrid, mPostSigma, main = "Marginal Posterior Distributions For Sigma", 
+     type="l", lwd=2, xlab="Sigma", ylab="Posterior")
+
+```
+### Marginal Posterior Plots For Second Part
+```{r}
+stepBeta0Grid = 0.05
+stepBeta1Grid = 0.01
+stepBeta2Grid = 0.01
+stepSigmaGrid = 0.1
+
+beta0Grid = seq(2, 4, by = stepBeta0Grid)
+beta1Grid = seq(0.5, 1, by = stepBeta1Grid)
+beta2Grid = seq(-0.25, 0.25, by = stepBeta2Grid)
+sigmaGrid = seq(0.1, 1, by = stepSigmaGrid)
+
+nBeta0Grid = length(beta0Grid)
+nBeta1Grid = length(beta1Grid)
+nBeta2Grid = length(beta2Grid)
+nSigmaGrid = length(sigmaGrid)
+
+#Compute Joint Posterior
+priorM = computePrior()
+postM = computeJointPost(mRate, bodySize, instar, priorM)
+```
+
+```{r}
+# Posterior Beta 0|data
+mPostBeta0 = apply(postM, c(1), sum)
+mPostBeta0 = mPostBeta0 /  (sum(mPostBeta0) * stepBeta0Grid)
+plot(beta0Grid, mPostBeta0, main = "Marginal Posterior Distributions For Beta 0", 
+     type="l", lwd=2, xlab="Beta 0", ylab="Posterior")
+```
+```{r}
+# Posterior Beta 1|data
+mPostBeta1 = apply(postM, c(2), sum)
+mPostBeta1 = mPostBeta1 /  (sum(mPostBeta1) * stepBeta1Grid)
+plot(beta1Grid, mPostBeta1, main = "Marginal Posterior Distributions For Beta 1", 
+     type="l", lwd=2, xlab="Beta 1", ylab="Posterior")
+```
+```{r}
+# Posterior Beta 2|data
+mPostBeta2 = apply(postM, c(3), sum)
+mPostBeta2 = mPostBeta2 /  (sum(mPostBeta2) * stepBeta2Grid)
+plot(beta2Grid, mPostBeta2, main = "Marginal Posterior Distributions For Beta 2", 
+     type="l", lwd=2, xlab="Beta 2", ylab="Posterior")
+
+```
+```{r}
+# Posterior Sigma|data
+mPostSigma = apply(postM, c(4), sum)
+mPostSigma = mPostSigma /  (sum(mPostSigma) * stepSigmaGrid)
+plot(sigmaGrid, mPostSigma, main = "Marginal Posterior Distributions For Sigma", 
+     type="l", lwd=2, xlab="Sigma", ylab="Posterior")
+
+```
+```{r}
+## Enter code here ##
+stepBeta0Grid = 0.05
+stepBeta1Grid = 0.01
+stepBeta2Grid = 0.01
+stepSigmaGrid = 0.005
+
+beta0Grid = seq(2, 3.5, by = stepBeta0Grid)
+beta1Grid = seq(0.75, 1, by = stepBeta1Grid)
+beta2Grid = seq(-0.1, 0.25, by = stepBeta2Grid)
+sigmaGrid = seq(0.3, 0.5, by = stepSigmaGrid)
+
+nBeta0Grid = length(beta0Grid)
+nBeta1Grid = length(beta1Grid)
+nBeta2Grid = length(beta2Grid)
+nSigmaGrid = length(sigmaGrid)
+
+#Compute Joint Posterior
+priorM = computePrior()
+postM = computeJointPost(mRate, bodySize, instar, priorM)
+```
+
+### Marginal Posterior Plots For Gridsize I picked
+```{r}
+# Posterior Beta 0|data
+mPostBeta0 = apply(postM, c(1), sum)
+mPostBeta0 = mPostBeta0 /  (sum(mPostBeta0) * stepBeta0Grid)
+plot(beta0Grid, mPostBeta0, main = "Marginal Posterior Distributions For Beta 0", 
+     type="l", lwd=2, xlab="Beta 0", ylab="Posterior")
+```
+```{r}
+# Posterior Beta 1|data
+mPostBeta1 = apply(postM, c(2), sum)
+mPostBeta1 = mPostBeta1 /  (sum(mPostBeta1) * stepBeta1Grid)
+plot(beta1Grid, mPostBeta1, main = "Marginal Posterior Distributions For Beta 1", 
+     type="l", lwd=2, xlab="Beta 1", ylab="Posterior")
+```
+```{r}
+# Posterior Beta 2|data
+mPostBeta2 = apply(postM, c(3), sum)
+mPostBeta2 = mPostBeta2 /  (sum(mPostBeta2) * stepBeta2Grid)
+plot(beta2Grid, mPostBeta2, main = "Marginal Posterior Distributions For Beta 2", 
+     type="l", lwd=2, xlab="Beta 2", ylab="Posterior")
+
+```
+```{r}
+# Posterior Sigma|data
+mPostSigma = apply(postM, c(4), sum)
+mPostSigma = mPostSigma /  (sum(mPostSigma) * stepSigmaGrid)
+plot(sigmaGrid, mPostSigma, main = "Marginal Posterior Distributions For Sigma", 
+     type="l", lwd=2, xlab="Sigma", ylab="Posterior")
+
+```
+Final Grid for step 2 using specualtion:
+stepBeta0Grid = 0.05
+stepBeta1Grid = 0.01
+stepBeta2Grid = 0.01
+stepSigmaGrid = 0.005 Here having 0.001 gives a realy nice smooth graph, but
+takes too long to compute.
+
+beta0Grid = seq(2, 3.5, by = stepBeta0Grid)
+beta1Grid = seq(0.75, 1, by = stepBeta1Grid)
+beta2Grid = seq(-0.1, 0.25, by = stepBeta2Grid)
+sigmaGrid = seq(0.3, 0.5, by = stepSigmaGrid)
+
+## Step 3
+```{r}
+# Marginal Posterior Beta 1|data
+mean_mPostBeta1 = sum(beta1Grid * mPostBeta1) * stepBeta1Grid
+plot(beta1Grid, mPostBeta1, main = "Marginal Posterior Distributions For Beta 1", 
+     type="l", lwd=2, xlab="Beta 1", ylab="Posterior")
+abline(v= mean_mPostBeta1, lwd=2, lty=2, col="green")
+```
+```{r}
+# Marginal Posterior Beta 1|data
+mean_mPostBeta2 = sum(beta2Grid * mPostBeta2) * stepBeta2Grid
+plot(beta2Grid, mPostBeta2, main = "Marginal Posterior Distributions For Beta 2", 
+     type="l", lwd=2, xlab="Beta 2", ylab="Posterior")
+abline(v= mean_mPostBeta2, lwd=2, lty=2, col="green")
+```
+```{r}
+# joint posterior (i.e., for 𝑃(𝛽 , 𝛽 |𝑑𝑎𝑡𝑎)).
+mPostBeta2_3 = apply(postM, c(2, 3), sum)
+mPostBeta2_3 = mPostBeta2_3 / (sum(mPostBeta2_3) * stepBeta1Grid * stepBeta2Grid)
+library(lattice) 
+new.palette=colorRampPalette(c("white","red","yellow","white"),space="rgb") 
+levelplot(main="Joint Posterior of B1 and B2",mPostBeta2_3, col.regions=new.palette(20),
+  xlab = "B1", ylab = "B2",
+  scales=list(x=list(at=c(1,nBeta1Grid), labels=c(0.75,1)),
+                      y=list(at=c(1,nBeta2Grid), labels=c(-0.1,0.25))))
+```
+
+## Step 4
+It has this shape because as we have seen earlier in our scatter plot, 
+body size and instar were not independent and in fact were positively correlated 
+hence the weights assigned to each should be correlated and mostly potive as well. 
+This is why we see B1 and B2 being correlated. Here, as B1 increases B2 decreases 
+and vise versa as the two are negatively correlated. Their total
+contribution is the result of their individual impact therefore the more weight one
+has, the less the other has hence the negative correlation seen between B1 and B2 above 
+to maintain their total contribution.
+
+## Step 5
+```{r}
+# probability that both 𝛽1 and 𝛽2 are greater than zero.
+prop = 0
+for (nB1 in 1:nBeta1Grid) {
+  for (nB2 in 1:nBeta2Grid) {
+    if(beta1Grid[nB1] > 0 && beta2Grid[nB2] > 0)
+      prop = prop + mPostBeta2_3[nB1, nB2]
+  }
+}
+# Normalize
+prop = prop / sum(mPostBeta2_3)
+cat("probability that both B1 and B2 are greater than zero: ", round(prop, 5))
+```
+
+# Question 2
+
+## Step 1
+I expect this shift to be upwards as B1 and B2 are negatively 
+correlated as seen above and both are mostly positive (over 90%)
+therefore excluding bodySize will lead the weight for instar to account for
+bodySize's imapct, as the two are correlated, leading it to weight 
+more hence more positive as seen in the heat map.
+
+
+## Step 2
+```{r}
+stepBeta0Grid = 0.02
+stepBeta1Grid = 0.01
+stepSigmaGrid = 0.005
+
+beta0Grid = seq(-3.5, -1.5, by = stepBeta0Grid)
+beta1Grid = seq(1.1, 1.5, by = stepBeta1Grid)
+sigmaGrid = seq(0.6, 1, by = stepSigmaGrid)
+
+nBeta0Grid = length(beta0Grid)
+nBeta1Grid = length(beta1Grid)
+nSigmaGrid = length(sigmaGrid)
+
+computeUniPrior <-function() {
+  prior = array(1, dim = c(nBeta0Grid, nBeta1Grid, nSigmaGrid))
+  for (nB0 in 1:nBeta0Grid) {
+    for (nB1 in 1:nBeta1Grid) {
+      for (nsig in 1:nSigmaGrid) {
+        prior[nB0, nB1, nsig] = 1 / (nsig ^ 2)
+      }
+    }
+  }
+  return(prior)
+}
+
+computeUniLikelihood <- function(y, x, b0, b1, noise) {
+  loglike = sum(log(dnorm(y, (b0 + b1 * x), noise)))
+  like = exp(loglike)
+  return(like)
+}
+
+computeUniJointPost <- function(y, x, priorM) {
+  postM = array(1, dim = c(nBeta0Grid, nBeta1Grid, nSigmaGrid))
+  for (nB0 in 1:nBeta0Grid) {
+    B0 = beta0Grid[nB0]
+    for (nB1 in 1:nBeta1Grid) {
+      B1 = beta1Grid[nB1]
+      for (nsig in 1:nSigmaGrid) {
+        sig = sigmaGrid[nsig]
+        liklihood = computeUniLikelihood(y, x, B0, B1, sig)
+        prior = priorM[nB0, nB1, nsig]
+        postM[nB0, nB1, nsig] = liklihood * prior
+      }
+    }
+  }
+  postM = postM / (sum(postM) * stepBeta1Grid * stepBeta2Grid * stepSigmaGrid)
+}
+
+priorM = computeUniPrior()
+postM = computeUniJointPost(mRate, instar, priorM)
+```
+```{r}
+# Posterior Beta 0|data
+mPostBeta0 = apply(postM, c(1), sum)
+mPostBeta0 = mPostBeta0 /  (sum(mPostBeta0) * stepBeta0Grid)
+plot(beta0Grid, mPostBeta0, main = "Marginal Posterior Distributions For Beta 0", 
+     type="l", lwd=2, xlab="Beta 0", ylab="Posterior")
+```
+```{r}
+# Posterior Beta 1|data
+mPostBeta1 = apply(postM, c(2), sum)
+mPostBeta1 = mPostBeta1 /  (sum(mPostBeta1) * stepBeta1Grid)
+plot(beta1Grid, mPostBeta1, main = "Marginal Posterior Distributions For Beta 1", 
+     type="l", lwd=2, xlab="Beta 1", ylab="Posterior")
+```
+```{r}
+# Posterior Sigma|data
+mPostSigma = apply(postM, c(3), sum)
+mPostSigma = mPostSigma /  (sum(mPostSigma) * stepSigmaGrid)
+plot(sigmaGrid, mPostSigma, main = "Marginal Posterior Distributions For Sigma", 
+     type="l", lwd=2, xlab="Sigma", ylab="Posterior")
+
+```
+## Step 3
+```{r}
+mean_mPostBeta1U = sum(mPostBeta1 * beta1Grid) * stepBeta1Grid
+cat("mean marginal posteriors for Beta 1 under the univariate: ", mean_mPostBeta1U, "\n")
+
+cat("mean marginal posteriors for Beta 1 under the bivariate: ", mean_mPostBeta2 + mean_mPostBeta1)
+```
+
+Here we have a more positive mean Beta instar as it has to account for the weight of
+Beta 1 and Beta 2 in the bivariate model by itself. As both beta 1 and beta 2
+had a positve impact in the bivariate model, and one of them is being excluded here,
+then the other accounts for it's impact and as the two are negatively correlated
+leading to the upward shift predicted earlier and a more positive mean.
+
+## Step 4
+```{r}
+#Everythign else already logged.
+plot(main = " log(bodySize) vs log(mRate)", bodySize, mRate, 
+     col = as.numeric(instar), pch=16, xlab=" log(bodySize)", ylab=" log(mRate)")
+legend("topleft", legend=unique(instar), col=1:5, pch = 16, title = "Instar", bty="n")
+```
+
+In the plot we see that bodysize linearly increases with the instar stage which makes sense
+as we saw in our first plot using pairs that the two were positively correlated.
+Also, we see that as the these parameters increase so does the organism's mRate meaning 
+that as mRate increases as either of them increases leading to a positive impact. Furthermore,
+we see some manducta (asides from a couple of outliers which could be due to genetics) in the 
+same stage have different metabolic rates based on bodySize with higher bodysize leading to
+higher mRates therefore suggesting that bodysize might be a better predictor in our
+previous uni-variate case.
+

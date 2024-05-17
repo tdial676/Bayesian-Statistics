@@ -1,0 +1,246 @@
+---
+title: "Ps5 solutions"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+# Question 1
+
+## preliminaries
+```{r}
+# clear workspace
+rm(list=ls())
+# set random seed
+set.seed(123)
+library(mvtnorm)
+```
+
+## Step 1
+```{r}
+sigma_squared = 0
+
+TargetDtbn <- function(theta) {
+  theta1 = theta[1]
+  theta2 = theta[2]
+  if (theta1 > 1 || theta1 < 0 || theta2 < 0 || theta2 > 1) {
+    return(0)
+  }
+  cond = -theta1 + 1
+  target = 0
+  # Bottom
+  if (theta2 <= cond && theta2 <= theta1){
+    target = 6 * theta2
+  }
+  # Left
+  else if (theta2 <= cond && theta2 >= theta1) {
+    target = 6 * theta1
+  }
+  # Right
+  else if (theta2 >= cond && theta2 <= theta1) {
+    target = 3 - 6 * (theta1 - 0.5)
+  }
+  # Top
+  else {
+    target = 3 - 6 * (theta2 - 0.5)
+  }
+  return(target)
+}
+
+SampleProposalDtbn <- function(theta) {
+  covariance_matrix = diag(length(theta)) * sigma_squared
+  return(rmvnorm(1, theta, covariance_matrix))
+}
+
+DensityProposalDtbn <- function(vec1, vec2) {
+  covariance_matrix = diag(length(vec1)) * sigma_squared
+  return((dmvnorm(vec1, vec2, covariance_matrix)))
+}
+
+MHsampling <- function(TargetDtbn, SampleProposalDtbn, DensityProposalDtbn, n, theta0) {
+  sampleM = array(1, c(n, length(theta0)))
+  stopifnot(TargetDtbn(theta0) > 0)
+  t_prev = theta0
+  for (t in 1:n) {
+    #Draw candidate
+    t_curr = SampleProposalDtbn(t_prev)
+    
+    #acceptance ratio
+    target_prev = TargetDtbn(t_prev)
+    target_curr = TargetDtbn(t_curr)
+    dens_prev = DensityProposalDtbn(t_prev, t_curr)
+    dens_curr = DensityProposalDtbn(t_curr, t_prev)
+    r = ((target_curr / dens_curr) / (target_prev / dens_prev))
+    
+    #Set sample with some prob min{r, 1}
+    prob = min(r, 1)
+    if(sample(c(1, 0), 1, prob = c(prob, 1 - prob)) == 1) {
+      sampleM[t, ] = t_curr
+      t_prev = t_curr
+    } else {
+      sampleM[t, ] = t_prev
+    }
+    if (t %% 25000 == 0) {
+      print(paste("Current t: ", t))
+    }
+  }
+  return(sampleM)
+}
+```
+
+
+## Step 2
+```{r}
+n = 250000
+sigma_squared = 0.25
+MHsamples =MHsampling(TargetDtbn, SampleProposalDtbn, DensityProposalDtbn, n, c(0.5, 0.5))
+plot(main = "Theta 1 vs Theta 2 Plot", MHsamples[, 1], MHsamples[, 2],
+     xlab = "Theta 1", ylab = "Theta 2",  
+     col=rgb(red=0.0, green=0.0, blue=1.0, alpha=0.0075) )
+```
+
+## Step 3
+```{r}
+Mtheta1 = MHsamples[, 1]
+hist(Mtheta1, probability = TRUE, breaks = 100, xlab = "Theta 1")
+theta1grid = seq(0, 1, length = length(Mtheta1))
+lines(theta1grid, 3 - 6 * (theta1grid - 0.5))
+lines(theta1grid, 6 * theta1grid)
+```
+
+## Step 4
+```{r}
+Mtheta2 = MHsamples[, 2]
+paste("Mean of 𝜃1: ", round(mean(Mtheta1), 5))
+paste("Mean of 𝜃2: ", round(mean(Mtheta2), 5))
+paste("Variance of 𝜃1: ", round(var(Mtheta1) , 5))
+paste("Variance of 𝜃2: ", round(var(Mtheta2) , 5))
+paste("Correlation between 𝜃1 and 𝜃2: ", cor(Mtheta1, Mtheta2))
+```
+
+
+# Question 2
+
+## preliminaries
+```{r}
+data = read.csv("Wages1.csv")
+schooling = data$school
+exper = data$exper
+log_wages = log(data$wage)
+```
+
+## Step 1
+```{r}
+TargetDtbn2 <- function(theta) {
+  b0  = theta[1]
+  bsc = theta[2]
+  bec = theta[3]
+  sig = theta[4]
+  logLike = sum(log(dnorm(log_wages - (b0 + (bsc * schooling) + (bec * exper)), mean = 0, sd = sig)))
+  prior = 1 / (sig ^ 2)
+  posterior = prior * logLike
+  return(posterior)
+}
+
+SampleProposalDtbn2 <- function(theta) {
+  b0  = theta[1]
+  bsc = theta[2]
+  bec = theta[3]
+  sig = theta[4]
+  
+  sigma = rnorm(1, sig, sigma_squared)
+  
+  #sd > 0 by definition
+  while (sigma < 0) {
+    sigma = rnorm(1, sig, sigma_squared)
+  }
+  candidate = c(rnorm(1, b0, sigma_squared),
+                rnorm(1, bsc, sigma_squared),
+                rnorm(1, bec, sigma_squared),
+                sigma)
+  return(candidate)
+}
+
+DensityProposalDtbn2 <- function(vec1, vec2) {
+  covariance_matrix = diag(length(vec1)) * sigma_squared
+  return(dmvnorm(vec1, vec2, covariance_matrix))
+}
+
+MHsampling2 <- function(TargetDtbn2, SampleProposalDtbn2, DensityProposalDtbn2, n, theta0) {
+  sampleM = array(1, c(n, length(theta0)))
+
+  t_prev = theta0
+  for (t in 1:n) {
+    #Draw candidate
+    t_curr = SampleProposalDtbn2(t_prev)
+    
+    #acceptance ratio
+    target_prev = TargetDtbn2(t_prev)
+    target_curr = TargetDtbn2(t_curr)
+    dens_prev = DensityProposalDtbn2(t_prev, t_curr)
+    dens_curr = DensityProposalDtbn2(t_curr, t_prev)
+    r = ((target_curr / dens_curr) / (target_prev / dens_prev))
+    
+    #Set sample with some prob min{r, 1}
+    if (r == Inf) {prob = 0} else {prob = min(r, 1)}
+    if(sample(c(1, 0), 1, prob = c(prob, 1 - prob)) == 1) {
+      sampleM[t, ] = t_curr
+      t_prev = t_curr
+    } else {
+      sampleM[t, ] = t_prev
+    }
+    if (t %% 100000 == 0) {
+      print(paste("Current t: ", t))
+    }
+  }
+  return(sampleM)
+}
+```
+
+## Step 2
+```{r}
+n = 510000
+sigma_squared = 0.05
+MHsamples2 = MHsampling2(TargetDtbn2, SampleProposalDtbn2, 
+                         DensityProposalDtbn2, n, c(0.5, 0.5, 0.5, 0.5))
+MB0 = MHsamples2[10001:n, 1]
+MBsc = MHsamples2[10001:n, 2]
+MBec = MHsamples2[10001:n, 3]
+MSig = MHsamples2[10001:n, 4]
+
+model = lm(log_wages ~ schooling + exper)
+ole = coef(model)
+B0_Hat = ole[1]
+Bsc_Hat = ole[2]
+Bec_Hat = ole[3]
+```
+```{r}
+hist(MB0, probability = TRUE, breaks = 100, xlab = "B0")
+abline(v=mean(MB0), col="red", lwd=5)
+abline(v=B0_Hat, col="blue", lwd=5)
+```
+```{r}
+hist(MBsc, probability = TRUE, breaks = 100, xlab = "Bsc")
+abline(v=mean(MBsc), col="red", lwd=5)
+abline(v=Bsc_Hat, col="blue", lwd=5)
+```
+```{r}
+hist(MBec, probability = TRUE, breaks = 100, xlab = "Bec")
+abline(v=mean(MBec), col="red", lwd=5)
+abline(v=Bec_Hat, col="blue", lwd=5)
+```
+```{r}
+hist(MSig, probability = TRUE, breaks = 100, xlab = "sigma")
+abline(v=mean(MSig), col="red", lwd=5)
+```
+
+## Step 3
+```{r}
+paste("𝑃(𝛽0 |𝑑𝑎𝑡𝑎): ", round(sd(MB0), 5))
+paste("𝑃(𝛽SC |𝑑𝑎𝑡𝑎: ", round(sd(MBsc), 5))
+paste(" 𝑃(𝛽EC |𝑑𝑎𝑡𝑎): ", round(sd(MBec), 5))
+paste("Posterior correlation between 𝛽SC and𝛽EC: ", round(cor(MBsc, MBec)))
+```
+
+
+

@@ -1,0 +1,517 @@
+---
+title: "Ec/ACM/CS 112. Problem set 2. Solutions"
+output:
+  html_document:
+    df_print: paged
+---
+# Preliminaries
+```{r}
+rm(list = ls())
+set.seed(123)
+```
+# PART 1
+## Define Params and load data
+```{r}
+data = read.csv("PS2_data.csv")
+aPrior = 5
+bPrior = 5
+nGridPoints = 100
+pGrid = seq(from = 0, to = 1, length.out = nGridPoints)
+gridSize = 1 / nGridPoints
+```
+## Helper Functions
+```{r}
+#compute prior matrix
+computeJointPrior <-function(){
+  prior = dbeta(x = pGrid, shape1 = aPrior, shape2 = bPrior)
+  return(outer(prior, prior, "*"))
+}
+
+#compute posterior matrix
+computeJointPosterior <- function(ball1_success, ball2_success, n1, n2, priorM) {
+  postM = matrix(rep(1, nGridPoints ^ 2),
+                  nrow = nGridPoints,
+                  ncol = nGridPoints,
+                  byrow = TRUE)
+  
+  for (row in 1:nGridPoints) {
+    for (col in 1:nGridPoints) {
+      p1 = pGrid[row]
+      p2 = pGrid[col]
+      likelyhood = dbinom(ball1_success, n1, p1) * dbinom(ball2_success, n2, p2)
+      prior = priorM[row, col]
+      postM[row, col] = likelyhood * prior
+    }
+  }
+  postM = postM / (sum(postM) * gridSize ^ 2)
+  return(postM)
+}
+```
+
+# step 1: Fit using only old data
+```{r}
+ar_data = data[data$tosser=="ar", ]
+ar_ball1 = ar_data$ball_1
+ar_ball2 = ar_data$ball_2
+arWater_1 = sum(ar_ball1)
+arWater_2 = sum(ar_ball2)
+ar_n1 = length(ar_ball1)
+ar_n2 = length(ar_ball2)
+
+#Heat Map
+priorM = computeJointPrior()
+postM = computeJointPosterior(arWater_1, arWater_2, ar_n1, ar_n2, priorM)
+library(lattice)
+new.palette=colorRampPalette(c("white","red","yellow","white"),space="rgb")
+levelplot(main= "Joint Posterior Density", 
+          postM, col.regions=new.palette(20),
+          xlab = "p1", ylab = "p2",
+          scales=list(x=list(at=c(50), labels=c(0.5)),
+                      y=list(at=c(50), labels=c(0.5))),
+          panel = function(...){
+            panel.levelplot(...)
+            panel.abline(0,1, col = "black")
+            panel.abline(v=50, col = "black", lty=2)
+            panel.abline(h=50, col = "black", lty=2)})
+```
+```{r}
+#Marginal Posterior
+computePost <- function(data, prior) {
+  success = sum(data)
+  trials = length(data)
+  likelyhood = dbinom(x = success, size = trials, prob = pGrid)
+  posterior = likelyhood * prior
+  return(posterior / (sum(posterior) * gridSize))
+}
+prior = dbeta(x = pGrid, shape1 = aPrior, shape2 = bPrior)
+post_ball1 = computePost(ar_ball1, prior)
+post_ball2 = computePost(ar_ball2, prior)
+plot(main = "Marginal Posterior Densities", pGrid, post_ball1, 
+     type = "l", lwd = 3, xlab = "Theta", ylab = "Posterior")
+lines(pGrid, post_ball2, type = "l", lwd = 3, col = "red")
+legend("topleft", legend = c("p1", "p2"), lty = 1, 
+       col = c("black", "red"), lwd = c(5, 5), bty = "n")
+```
+```{r}
+#Mean and Standard Deviation and Posterior Probability that p1 < p2
+posterior_mean_ball1 = sum(pGrid * post_ball1) * gridSize
+posterior_sd_ball1 = 
+  sqrt(sum((pGrid - posterior_mean_ball1)^2 * post_ball1) * gridSize)
+posterior_mean_ball2 = sum(pGrid * post_ball2) * gridSize
+posterior_sd_ball2 =  
+  sqrt(sum((pGrid - posterior_mean_ball2)^2 * post_ball2) * gridSize)
+cat("\nMean for ball 1 posterior: ", round(posterior_mean_ball1, 5))
+cat("\nSD for ball 1 posterior: ", round(posterior_sd_ball1, 5))
+cat("\nMean for ball 2 posterior: ", round(posterior_mean_ball2, 5))
+cat("\nSD for ball 2 posterior: ", round(posterior_sd_ball2, 5))
+prob = sum(postM[upper.tri(postM, TRUE)]) * (gridSize ^ 2) 
+cat("\nPosterior Probability that p1 < p2: ", prob)
+```
+
+# step 2: Fit only using new data
+```{r}
+nh_data = data[data$tosser=="nh", ]
+nh_ball1 = nh_data$ball_1
+nh_ball2 = nh_data$ball_2
+nhWater_1 = sum(nh_ball1)
+nhWater_2 = sum(nh_ball2)
+nh_n1 = length(nh_ball1)
+nh_n2 = length(nh_ball2)
+
+#Heat Map
+priorM = computeJointPrior()
+postM = computeJointPosterior(nhWater_1, nhWater_2, nh_n1, nh_n2, priorM)
+library(lattice)
+new.palette=colorRampPalette(c("white","red","yellow","white"),space="rgb")
+levelplot(main= "Joint Posterior Density", 
+          postM, col.regions=new.palette(20),
+          xlab = "p1", ylab = "p2",
+          scales=list(x=list(at=c(50), labels=c(0.5)),
+                      y=list(at=c(50), labels=c(0.5))),
+          panel = function(...){
+            panel.levelplot(...)
+            panel.abline(0,1, col = "black")
+            panel.abline(v=50, col = "black", lty=2)
+            panel.abline(h=50, col = "black", lty=2)})
+```
+```{r}
+#Marginal Posterior
+prior = dbeta(x = pGrid, shape1 = aPrior, shape2 = bPrior)
+post_ball1 = computePost(nh_ball1, prior)
+post_ball2 = computePost(nh_ball2, prior)
+plot(main = "Marginal Posterior Densities", pGrid, post_ball1, 
+     type = "l", lwd = 3, xlab = "Theta", ylab = "Posterior")
+lines(pGrid, post_ball2, type = "l", lwd = 3, col = "red")
+legend("topleft", legend = c("p1", "p2"), lty = 1, 
+       col = c("black", "red"), lwd = c(5, 5), bty = "n")
+```
+```{r}
+#Mean and Standard Deviation and Posterior Probability that p1 < p2
+posterior_mean_ball1 = sum(pGrid * post_ball1) * gridSize
+posterior_sd_ball1 = 
+  sqrt(sum((pGrid - posterior_mean_ball1)^2 * post_ball1) * gridSize)
+posterior_mean_ball2 = sum(pGrid * post_ball2) * gridSize
+posterior_sd_ball2 =  
+  sqrt(sum((pGrid - posterior_mean_ball2)^2 * post_ball2) * gridSize)
+cat("\nMean for ball 1 posterior: ", round(posterior_mean_ball1, 5))
+cat("\nSD for ball 1 posterior: ", round(posterior_sd_ball1, 5))
+cat("\nMean for ball 2 posterior: ", round(posterior_mean_ball2, 5))
+cat("\nSD for ball 2 posterior: ", round(posterior_sd_ball2, 5))
+prob = sum(postM[upper.tri(postM, TRUE)]) * (gridSize ^ 2) 
+cat("\nPosterior Probability that p1 < p2: ", prob)
+```
+# Step 3: Fit using all the data
+
+```{r}
+ball1 = data$ball_1
+ball2 = data$ball_2
+success_ball1 = sum(ball1)
+success_ball2 = sum(ball2)
+n_ball1 = length(ball1)
+n_ball2 = length(ball2)
+
+nGridPoints = 200
+pGrid = seq(from = 0, to = 1, length.out = nGridPoints)
+gridSize = 1 / nGridPoints
+#Heat Map
+priorM = computeJointPrior()
+postM = computeJointPosterior(success_ball1, success_ball2, n_ball1, n_ball2, priorM)
+library(lattice)
+new.palette=colorRampPalette(c("white","red","yellow","white"),space="rgb")
+levelplot(main= "Joint Posterior Density", 
+          postM, col.regions=new.palette(20),
+          xlab = "p1", ylab = "p2",
+          scales=list(x=list(at=c(100), labels=c(0.5)),
+                      y=list(at=c(100), labels=c(0.5))),
+          panel = function(...){
+            panel.levelplot(...)
+            panel.abline(0,1, col = "black")
+            panel.abline(v=100, col = "black", lty=2)
+            panel.abline(h=100, col = "black", lty=2)})
+```
+```{r}
+prior = dbeta(x = pGrid, shape1 = aPrior, shape2 = bPrior)
+post_ball1 = computePost(ball1, prior)
+post_ball2 = computePost(ball2, prior)
+plot(main = "Marginal Posterior Densities", pGrid, post_ball1, 
+     type = "l", lwd = 3, xlab = "Theta", ylab = "Posterior")
+lines(pGrid, post_ball2, type = "l", lwd = 3, col = "red")
+legend("topleft", legend = c("p1", "p2"), lty = 1, 
+       col = c("black", "red"), lwd = c(5, 5), bty = "n")
+```
+```{r}
+#Mean and Standard Deviation and Posterior Probability that p1 < p2
+posterior_mean_ball1 = sum(pGrid * post_ball1) * gridSize
+posterior_sd_ball1 = 
+  sqrt(sum((pGrid - posterior_mean_ball1)^2 * post_ball1) * gridSize)
+posterior_mean_ball2 = sum(pGrid * post_ball2) * gridSize
+posterior_sd_ball2 =  
+  sqrt(sum((pGrid - posterior_mean_ball2)^2 * post_ball2) * gridSize)
+cat("\nMean for ball 1 posterior: ", round(posterior_mean_ball1, 5))
+cat("\nSD for ball 1 posterior: ", round(posterior_sd_ball1, 5))
+cat("\nMean for ball 2 posterior: ", round(posterior_mean_ball2, 5))
+cat("\nSD for ball 1 posterior: ", round(posterior_sd_ball2, 5))
+prob = sum(postM[upper.tri(postM, TRUE)]) * (gridSize ^ 2) 
+cat("\nPosterior Probability that p1 < p2: ", prob)
+```
+
+# PART 2
+
+# step 1
+### Methods
+```{r}
+n = 100
+bivariate <-function(p1, p2, mu1, mu2, var1, var2, p) {
+  N = 1 / (2 * pi * var1 * var2 * sqrt(1 - p^2))
+  z1 = ((p1 - mu1) ^ 2) / (var1 ^ 2)
+  z2 = (2 * p * (p1 - mu1) * (p2 - mu2)) / (var1 * var2)
+  z3 = ((p2 - mu2) ^ 2) / (var2 ^ 2)
+  Z = z1 -z2 + z3
+  joint_pdf = N * exp((-1 / (2 * (1 - p^2))) * Z)
+  return(joint_pdf)
+}
+bivariate_PriorM <- function(mu1, mu2, var1, var2, p) {
+  pGrid = seq(from = 0, to = 1, length.out = n)
+  priorM = matrix(rep(1, n ^ 2), 
+                  nrow = n, 
+                  ncol = n,
+                  byrow = TRUE)
+  for (row in 1:n) {
+    for (col in 1:n) {
+      p1 = pGrid[row]
+      p2 = pGrid[col]
+      priorM[row, col] = bivariate(p1, p2, mu1, mu2, var1, var2, p) 
+    }
+  }
+  return(priorM / (sum(priorM) * (1 / n) ^ 2)) # To normalize
+}
+```
+
+### A
+```{r}
+mu1 = mu2 = 0.5
+var1 = var2 = 1
+p = 0
+priorM = bivariate_PriorM(mu1, mu2, var1, var2, p)
+cat("Sum of Prior: ", sum(priorM * (1 / n) ^ 2))
+levelplot(main= "Prior Matrix  (rho = 0)", 
+          priorM, col.regions=new.palette(20),
+          xlab = "p1", ylab = "p2",
+          scales=list(x=list(at=c(50), labels=c(0.5)),
+                      y=list(at=c(50), labels=c(0.5))),
+          panel = function(...){
+            panel.levelplot(...)
+            panel.abline(0,1, col = "black")
+            panel.abline(v=50, col = "black", lty=2)
+            panel.abline(h=50, col = "black", lty=2)})
+```
+
+### B
+```{r}
+mu1 = mu2 = 0.5
+var1 = var2 = 1
+p = 0.25
+priorM = bivariate_PriorM(mu1, mu2, var1, var2, p)
+cat("Sum of Prior: ", sum(priorM * (1 / n) ^ 2))
+levelplot(main= "Prior Matrix (rho = 0.25)", 
+          priorM, col.regions=new.palette(20),
+          xlab = "p1", ylab = "p2",
+          scales=list(x=list(at=c(50), labels=c(0.5)),
+                      y=list(at=c(50), labels=c(0.5))),
+          panel = function(...){
+            panel.levelplot(...)
+            panel.abline(0,1, col = "black")
+            panel.abline(v=50, col = "black", lty=2)
+            panel.abline(h=50, col = "black", lty=2)})
+```
+
+### C
+```{r}
+mu1 = mu2 = 0.5
+var1 = var2 = 1
+p = 0.5
+priorM = bivariate_PriorM(mu1, mu2, var1, var2, p)
+cat("Sum of Prior: ", sum(priorM * (1 / n) ^ 2))
+levelplot(main= "Prior Matrix  (rho = 0.5)", 
+          priorM, col.regions=new.palette(20),
+          xlab = "p1", ylab = "p2",
+          scales=list(x=list(at=c(50), labels=c(0.5)),
+                      y=list(at=c(50), labels=c(0.5))),
+          panel = function(...){
+            panel.levelplot(...)
+            panel.abline(0,1, col = "black")
+            panel.abline(v=50, col = "black", lty=2)
+            panel.abline(h=50, col = "black", lty=2)})
+```
+
+## Step 2
+## A
+```{r}
+n = 200
+nGridPoints = 200
+pGrid = seq(from = 0, to = 1, length.out = nGridPoints)
+gridSize = 1 / nGridPoints
+mu1 = mu2 = 0.5
+var1 = var2 = 1
+p = 0
+
+priorM = bivariate_PriorM(mu1, mu2, var1, var2, p)
+postM = computeJointPosterior(success_ball1, success_ball2, n_ball1, n_ball2, priorM)
+levelplot(main= "Joint Posterior Density", 
+          postM, col.regions=new.palette(20),
+          xlab = "p1", ylab = "p2",
+          scales=list(x=list(at=c(100), labels=c(0.5)),
+                      y=list(at=c(100), labels=c(0.5))),
+          panel = function(...){
+            panel.levelplot(...)
+            panel.abline(0,1, col = "black")
+            panel.abline(v=100, col = "black", lty=2)
+            panel.abline(h=100, col = "black", lty=2)})
+```
+```{r}
+post_ball1 = computePost(ball1, rowSums(priorM))
+post_ball2 = computePost(ball2, colSums(priorM))
+plot(main = "Marginal Posterior Densities", pGrid, post_ball1, 
+     type = "l", lwd = 3, xlab = "Theta", ylab = "Posterior")
+lines(pGrid, post_ball2, type = "l", lwd = 3, col = "red")
+legend("topleft", legend = c("p1", "p2"), lty = 1, 
+       col = c("black", "red"), lwd = c(5, 5), bty = "n")
+```
+```{r}
+#Mean and Standard Deviation and Posterior Probability that p1 < p2
+posterior_mean_ball1 = sum(pGrid * post_ball1) * gridSize
+posterior_sd_ball1 = 
+  sqrt(sum((pGrid - posterior_mean_ball1)^2 * post_ball1) * gridSize)
+posterior_mean_ball2 = sum(pGrid * post_ball2) * gridSize
+posterior_sd_ball2 =  
+  sqrt(sum((pGrid - posterior_mean_ball2)^2 * post_ball2) * gridSize)
+cat("\nMean for ball 1 posterior: ", round(posterior_mean_ball1, 5))
+cat("\nSD for ball 1 posterior: ", round(posterior_sd_ball1, 5))
+cat("\nMean for ball 2 posterior: ", round(posterior_mean_ball2, 5))
+cat("\nSD for ball 1 posterior: ", round(posterior_sd_ball2, 5))
+prob = sum(postM[upper.tri(postM, TRUE)]) * (gridSize ^ 2) 
+cat("\nPosterior Probability that p1 < p2: ", prob)
+```
+### B
+```{r}
+n = 200
+nGridPoints = 200
+pGrid = seq(from = 0, to = 1, length.out = nGridPoints)
+gridSize = 1 / nGridPoints
+mu1 = mu2 = 0.5
+var1 = var2 = 1
+p = 0.25
+
+priorM = bivariate_PriorM(mu1, mu2, var1, var2, p)
+postM = computeJointPosterior(success_ball1, success_ball2, n_ball1, n_ball2, priorM)
+levelplot(main= "Joint Posterior Density", 
+          postM, col.regions=new.palette(20),
+          xlab = "p1", ylab = "p2",
+          scales=list(x=list(at=c(100), labels=c(0.5)),
+                      y=list(at=c(100), labels=c(0.5))),
+          panel = function(...){
+            panel.levelplot(...)
+            panel.abline(0,1, col = "black")
+            panel.abline(v=100, col = "black", lty=2)
+            panel.abline(h=100, col = "black", lty=2)})
+```
+```{r}
+post_ball1 = computePost(ball1, rowSums(priorM))
+post_ball2 = computePost(ball2, colSums(priorM))
+plot(main = "Marginal Posterior Densities", pGrid, post_ball1, 
+     type = "l", lwd = 3, xlab = "Theta", ylab = "Posterior")
+lines(pGrid, post_ball2, type = "l", lwd = 3, col = "red")
+legend("topleft", legend = c("p1", "p2"), lty = 1, 
+       col = c("black", "red"), lwd = c(5, 5), bty = "n")
+```
+```{r}
+#Mean and Standard Deviation and Posterior Probability that p1 < p2
+posterior_mean_ball1 = sum(pGrid * post_ball1) * gridSize
+posterior_sd_ball1 = 
+  sqrt(sum((pGrid - posterior_mean_ball1)^2 * post_ball1) * gridSize)
+posterior_mean_ball2 = sum(pGrid * post_ball2) * gridSize
+posterior_sd_ball2 =  
+  sqrt(sum((pGrid - posterior_mean_ball2)^2 * post_ball2) * gridSize)
+cat("\nMean for ball 1 posterior: ", round(posterior_mean_ball1, 5))
+cat("\nSD for ball 1 posterior: ", round(posterior_sd_ball1, 5))
+cat("\nMean for ball 2 posterior: ", round(posterior_mean_ball2, 5))
+cat("\nSD for ball 1 posterior: ", round(posterior_sd_ball2, 5))
+prob = sum(postM[upper.tri(postM, TRUE)]) * (gridSize ^ 2) 
+cat("\nPosterior Probability that p1 < p2: ", prob)
+```
+### C
+```{r}
+n = 200
+nGridPoints = 200
+pGrid = seq(from = 0, to = 1, length.out = nGridPoints)
+gridSize = 1 / nGridPoints
+mu1 = mu2 = 0.5
+var1 = var2 = 1
+p = 0.5
+
+priorM = bivariate_PriorM(mu1, mu2, var1, var2, p)
+postM = computeJointPosterior(success_ball1, success_ball2, n_ball1, n_ball2, priorM)
+levelplot(main= "Joint Posterior Density", 
+          postM, col.regions=new.palette(20),
+          xlab = "p1", ylab = "p2",
+          scales=list(x=list(at=c(100), labels=c(0.5)),
+                      y=list(at=c(100), labels=c(0.5))),
+          panel = function(...){
+            panel.levelplot(...)
+            panel.abline(0,1, col = "black")
+            panel.abline(v=100, col = "black", lty=2)
+            panel.abline(h=100, col = "black", lty=2)})
+```
+```{r}
+post_ball1 = computePost(ball1, rowSums(priorM))
+post_ball2 = computePost(ball2, colSums(priorM))
+plot(main = "Marginal Posterior Densities", pGrid, post_ball1, 
+     type = "l", lwd = 3, xlab = "Theta", ylab = "Posterior")
+lines(pGrid, post_ball2, type = "l", lwd = 3, col = "red")
+legend("topleft", legend = c("p1", "p2"), lty = 1, 
+       col = c("black", "red"), lwd = c(5, 5), bty = "n")
+```
+```{r}
+#Mean and Standard Deviation and Posterior Probability that p1 < p2
+posterior_mean_ball1 = sum(pGrid * post_ball1) * gridSize
+posterior_sd_ball1 = 
+  sqrt(sum((pGrid - posterior_mean_ball1)^2 * post_ball1) * gridSize)
+posterior_mean_ball2 = sum(pGrid * post_ball2) * gridSize
+posterior_sd_ball2 =  
+  sqrt(sum((pGrid - posterior_mean_ball2)^2 * post_ball2) * gridSize)
+cat("\nMean for ball 1 posterior: ", round(posterior_mean_ball1, 5))
+cat("\nSD for ball 1 posterior: ", round(posterior_sd_ball1, 5))
+cat("\nMean for ball 2 posterior: ", round(posterior_mean_ball2, 5))
+cat("\nSD for ball 1 posterior: ", round(posterior_sd_ball2, 5))
+prob = sum(postM[upper.tri(postM, TRUE)]) * (gridSize ^ 2) 
+cat("\nPosterior Probability that p1 < p2: ", prob)
+```
+
+## Step 3
+Rho depicts the correlation between our priors and as we scale it up and down, 
+there is no noticeable changes in our posterior plots as seen above where our 
+means and standard deviation are extremely close as we scale rho. Because our 
+data set is large, our posteriors are mostly driven by the data.
+
+# PART 3
+
+## Step 1
+```{r}
+set.seed(123)
+
+#params
+sim = 10000
+tosses = 100
+thetas = rep(0, sim)
+mean_post_error = rep(0, sim)
+mean_post_no_error = rep(0, sim)
+
+#grid points
+nGridPoints = 100
+gridSize = 1 / nGridPoints
+pGrid = seq(from = 0, to = 1, length.out = nGridPoints)
+prior = dbeta(pGrid, aPrior, bPrior)
+
+#simulation
+for (i in 1:sim) {
+  pTrue = runif(1, min=0, max=1)
+  thetaTrue = sample(c(0.05, 0.15, 0.25), 1)
+  dataNoError = rbinom(tosses, 1, pTrue)
+  sus_tosses = tosses * thetaTrue
+  to_replace = sample(1:100, sus_tosses)
+  dataWithError = dataNoError
+  dataWithError[to_replace] = rbinom(sus_tosses, 1, 0.5)
+  
+  thetas[i] = thetaTrue
+  post_error = computePost(dataWithError, prior)
+  post_no_error = computePost(dataNoError, prior)
+  mean_post_error[i] = sum(post_error * pGrid) * gridSize
+  mean_post_no_error[i] = sum(post_no_error * pGrid) * gridSize
+}
+theta_1 = which(thetas == 0.05)
+theta_2 = which(thetas == 0.15)
+theta_3 = which(thetas == 0.25)
+plot(main = "Mean Posteriors", 
+     mean_post_error[theta_1], mean_post_no_error[theta_1],
+     ylab = "Mean Posterior (No Error)", xlab = " Mean Posterior (With Error)",
+     col=rgb(1, 0, 0, alpha = 0.1)
+     )
+points(mean_post_error[theta_2], mean_post_no_error[theta_2], col=rgb(0, 0, 1, alpha = 0.1))
+points(mean_post_error[theta_3], mean_post_no_error[theta_3], col=rgb(0, 1, 0, alpha = 0.1))
+abline(0,1, col="black")
+legend("topleft", legend=c(paste("Theta_True: ", 0.05), 
+                           paste("Theta_True: ", 0.15), 
+                           paste("Theta_True: ", 0.25)), bty="n",
+                           pch=c(1, 1, 1), col=c(rgb(1, 0, 0), rgb(0, 0, 1), rgb(0, 1, 0)))
+```
+
+## Step 2
+The black line represents values where the mean posterior with and without error are equal.
+We see that for lower theta values, the mean posteriors have a slope very close to the black
+line. However, as theta increases, we see that the mean rotates to the left around the the 
+point (0.5, 0.5), the true mean of our 100 coin flip until it become vertical at theta = 1. 
+This makes sense as when theta equals 1 then we assume all of our data has measurement error
+meaning we flip the coin 100 times for each simulation leading to a mean (with error) of 0.5 hence the 
+vertical line at x = 0.5. The reason we see this rotation is because as we increase theta, we increase the number
+of measurements with error that we are accounting for therefore leading the mean towards the true
+mean of a coin flip (vertical line at x = 0.5).
